@@ -1,0 +1,1003 @@
+/* ============================ R E S E T ============================ */
+
+@font-face {
+    font-family: "BancoDoBrasilRegular";
+    src: url(../font/BancoDoBrasilTextos-Regular.ttf) format('truetype');
+}
+@font-face {
+    font-family: "BancoDoBrasilBold";
+    src: url(../font/BancoDoBrasilTextos-Bold.ttf) format('truetype');
+}
+@font-face {
+    font-family: "BancoDoBrasilTitulos";
+    src: url(../font/BancoDoBrasilTitulos-Regular.ttf) format('truetype');
+}
+@font-face {
+    font-family: "BancoDoBrasilMedium";
+    src: url(../font/BancoDoBrasilTextos-Medium.ttf) format('truetype');
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    /*font-family: Arial, Helvetica, sans-serif;*/
+    font-family: "BancoDoBrasilRegular", sans-serif;
+    /*border: 1px solid red;*/
+}
+
+
+/* ============================ H E A D E R  /  F O O T E R   E   B O D Y ============================ */
+
+body {
+    /*background-image: url(../imgs/bg-160px.png);*/
+    background-color: #ffffff;
+    background-repeat: repeat-y;
+    background-size: cover;
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+}
+
+header {
+    background-color: #0038a8;
+    width: 100%;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px 0 30px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-container picture {
+    width: 70px;
+}
+
+.logo {
+    width: 100%;
+}
+
+.logo-container h2 {
+    color: white;
+}
+
+.foto {
+    width: 50px;
+    border-radius: 50%;
+}
+
+.conscientizacao {
+    width: 40px;
+    display: block;
+}
+
+.descricao {
+    font-size: 0.8rem !important;
+    color: #585959;
+}
+
+.asterisco {
+    color: red;
+}
+
+
+footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+    font-size: 14px;
+    color: #555;
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+    background-color: #f9f9f9;
+}
+
+footer img {
+    height: 20px;
+}
+
+footer a {
+    text-decoration: none;
+    color: #555;
+    transition: color 0.3s;
+}
+
+footer a:hover {
+    color: #007bff; /* Azul para hover */
+}
+
+
+/* ============================ I N D E X ============================ */
+
+.main .link-teams {
+    color: #0038a8;
+    font-weight: bold;
+}
+
+.btns-index-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 5px 10px;
+}
+
+.btn-exibicao-fichas {
+    border: 2px solid #0038a8;
+    border-radius: 10px;
+    padding: 10px 15px;
+    width: 200px;
+    background-color: #ffffff;
+    color: #0038a8;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.btn-exibicao-fichas:hover {
+    background-color: #cccccc;
+}
+
+.btn-exibicao-fichas:active {
+    box-shadow: inset 0 0 10px rgba(0, 56, 168, 0.5);
+}
+
+.btn-exibicao-fichas.selecionado {
+    background-color: #0038a8;
+    color: #ffffff;
+    border: 2px solid #0038a8;
+}
+
+.btn-exibicao-fichas.selecionado:hover {
+    background-color: #00246d;
+}
+
+.btn-exibicao-fichas-outubro{
+    color: #fc8b9f;
+    border: 2px solid #fc8b9f;
+    border-radius: 10px;
+    padding: 10px 15px;
+    width: 200px;
+    background-color: #ffffff;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.selecionado-outubro{
+    background-color: #fc8b9f;
+    color: #ffffff;
+    border: 2px solid #fc8b9f;
+}
+
+.container-filtro-trimeste {
+    max-width: 700px;
+    margin: 0 auto;
+    margin-top: 150px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.div-opcoes select {
+    width: 95%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+.div-opcoes {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+
+/* ============================ F O R M S ============================ */
+
+.article {
+    background-color: #ffffff;
+    width: 1080px;
+    margin: auto;
+    padding: 50px 100px;
+}
+
+.btn {
+    border: solid 1px #0038a8;
+    background-color: #0038a8;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.btn-outubro{
+    border: none;
+    background-color: #fc8b9f;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.btn-outubro:hover{
+    background-color: #fc8b9f;
+}
+
+.btn:hover{
+    background-color: #002368;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.btn.voltar {
+    float: right;
+    text-decoration: none;
+}
+.btn.enviar{
+    float: right;
+    margin-right: 40px;
+    margin-top: 10px;
+}
+.article p {
+    text-align: justify;
+    font-size: 1.1rem;
+    margin: 10px 0px;
+}
+
+.form {
+    margin-top: 30px;
+    width: 100%;
+}
+
+.form label {
+    font-size: 1.1rem;
+}
+
+.form select,
+.form input[type=number],
+.form input[type=text]{
+    margin: 10px 0 30px;
+    width: 300px;
+    padding: 5px 5px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid grey;
+    color: rgb(78, 78, 78);
+}
+
+textarea {
+    resize: none;
+    height: 75px;
+    width: 300px;
+    padding: 5px;
+}
+
+.salvar {
+    display: block;
+    margin: auto;
+}
+
+a {
+    color: #000000;
+}
+
+.table-lista-forms {
+    width: 100%;
+}
+
+.table-lista-forms, .table-lista-forms tr {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table-lista-forms td {
+    padding: 5px 10px;
+}
+
+.table-lista-forms td:has(a){
+    text-align: end;
+}
+
+.informacao-container {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+.informacao-container img {
+    width: 15px;
+    height: 15px;
+}
+
+.label-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 10px 0px;
+}
+
+.dados-empresa-preenchida p{
+    padding: 3px 0px;
+}
+
+.box-moedas{
+    display: flex !important;
+    align-items: center !important;
+    width: 300px !important;
+    margin-bottom: 45px !important;
+    margin-top: 10px!important;
+}
+
+.simbolo-moedas,
+.simbolo-moedas-menor{
+    display:none;
+    margin-right: 5px !important;
+}
+
+.input-moedas{
+    margin-bottom: 0px !important;
+    margin-top: 0px !important;
+}
+
+.area-upload {
+    margin: 30px auto;
+    padding: 30px;
+    border: 2px dashed #ccc;
+    background: #f9f9f9;
+    border-radius: 10px;
+    max-width: 600px;
+    text-align: center;
+}
+
+.area-upload:hover {
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+/* Container para posicionar o botão X relativo ao input */
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 20px 0;
+}
+
+.input-arquivo {
+    padding: 10px;
+    padding-right: 40px; /* Espaço extra na direita para não cobrir o texto com o X */
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+}
+
+/* Estilo do botão X */
+.btn-remover-arquivo {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%); /* Centraliza verticalmente */
+    color: #dc3545; /* Vermelho padrão de erro/cancelar */
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: none; /* Começa escondido */
+    z-index: 10;
+    transition: color 0.2s;
+}
+
+.btn-remover-arquivo:hover {
+    color: #a71d2a; /* Vermelho mais escuro ao passar o mouse */
+}
+
+/* ============================ TESTE DA FICHA 11 =====================*/
+.container11 {
+    padding: 20px;
+}
+
+.formulario11 {
+    margin-bottom: 20px;
+}
+
+.label-container11 {
+    margin-top: 10px;
+}
+
+label11 {
+    font-weight: bold;
+}
+
+.descricao11 {
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.table-relatorio11 {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+}
+
+.table-relatorio11 th,
+.table-relatorio11 td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.table-relatorio11 th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.link-expande11 {
+    color: #0038a8;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btn-relatorio-colar11, .btn-relatorio-enviar11 {
+    background-color: #0038a8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.btn-relatorio-colar11:hover, .btn-relatorio-enviar11:hover {
+    background-color: #87CEFA;
+}
+
+.area-input11 {
+    width: 100%;
+    height: 150px;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+/* Estilização das células do cabeçalho */
+.cabecalho {
+    background-color: #0038a8;
+    color: white;
+    text-align: left;
+    padding: 8px;
+    font-weight: bold;
+    border: 1px solid #ddd;
+}
+
+/* Estilização das células de dados */
+.view11 td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Estilização das linhas alternadas */
+.view11 tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* Estilização das linhas ao passar o mouse */
+.view11 tr:hover td {
+    background-color: #ddd;
+}
+
+/* Adiciona a barra de rolagem horizontal e define um tamanho fixo para a tabela */
+.view11 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;  /* Mantém a largura máxima dentro do contêiner pai */
+    display: block;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Estilização do botão */
+.btn-copiar11 {
+    background-color: #0038a8;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-copiar11:hover {
+    background-color: #87CEFA;
+}
+
+/* Estilização da mensagem */
+.btn-copiar11 {
+    font-size: #0038a8;
+    margin-top: 20px;
+    transition: opacity 0.5s ease;
+}
+
+.fade-out {
+    opacity: 0;
+}
+
+.fade-in {
+    opacity: 1;
+}
+/* ============================ V I E W S ============================ */
+
+.topo-view {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 95%;
+    margin: auto;
+    padding: 20px 0 20px 0
+}
+
+.opcoes-ficha-container {
+    width: 95%;
+    margin: auto;
+}
+
+.view-container {
+    background: #FFFFFF;
+    width: 100%;
+    margin: auto;
+    padding-bottom: 50px;
+}
+
+.table-lista-fichas {
+    border-collapse: collapse;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    table-layout: fixed;
+}
+
+.container-btn-enviar {
+    width: 95%;
+    margin: 10px auto 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-disabled {
+    background-color: dimgrey !important;
+    border: none !important;
+    color: #333333 !important;
+}
+
+.esconde-tabela{
+    display: none;
+}
+
+.texto-esquerda{
+    text-align: left !important;
+}
+
+td.porcentagem {
+  font-weight: bold;
+}
+/* ============================= V I E W S   F I C H A S   1 1   E   1 4 ================================ */
+
+.table-lista-fichas.maior {
+    width: auto !important;
+    overflow-x: scroll;
+    width: 95%;
+}
+
+.table-lista-fichas th {
+    padding: 2px !important;
+    width: auto;
+    position: sticky;
+    top: 0px;
+}
+
+.container-maior {
+    overflow-x: scroll;
+    width: 95%;
+    margin: auto;
+}
+
+.table-lista-ficha-maior th,
+.table-lista-ficha-maior td {
+    min-width: 150px;
+}
+
+/*  ============================ R E L A T Ó R I O ============================ */
+
+@media print {
+    .table-wrapper{
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    .table-lista-fichas-relatorio {
+        width: 100% !important;
+        table-layout: auto !important;
+    }
+    .table-lista-fichas-relatorio td,
+    .table-lista-fichas-relatorio th {
+        width: auto;
+        overflow: visible !important;
+    }
+
+    .table-lista-fichas-relatorio.maior th {
+        background-color: gray;
+        color: black;
+        font-weight: bold;
+    }
+
+    .table-lista-fichas-relatorio.maior td,
+    .table-lista-fichas-relatorio.maior th {
+
+        width: auto !important;
+        font-size: 11px;
+        padding: 2px;
+        border-top: 0.5px solid black;
+        border-bottom: 0.5px solid black;
+    }
+
+    .naoImprimir {
+        display: none;
+    }
+}
+
+.view-relatorio {
+    width : 100%;
+}
+
+.topo-view-relatorio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 95%;
+    margin: auto;
+    padding: 20px 0 20px 0;
+}
+
+.relatorio-ativo {
+    display: block;
+}
+
+.img-expandir {
+    width: 18px;
+    transition: 150ms linear 50ms;
+}
+
+.img-expandir:hover {
+    cursor: pointer;
+}
+
+.border-img-expandir {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 3px;
+    border-radius: 3px;
+    width: 28px;
+    height: 28px;
+}
+
+.border-img-expandir:hover {
+    background-color: #e6e6e6;
+    cursor: pointer;
+}
+
+.table-lista-fichas-relatorio
+{
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    table-layout: fixed;
+    display: none;
+
+    border-collapse: separate;
+    border-spacing: 0px;
+}
+
+.table-lista-fichas-relatorio th{
+    position: sticky;
+    top: 0px;
+}
+
+.table-lista-fichas td,
+.table-lista-fichas-relatorio td {
+    border: none;
+    padding: 8px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.table-lista-fichas th,
+.table-lista-fichas-relatorio th {
+    border: none;
+    color: #ffffff;
+    padding: 8px;
+    text-align: center;
+    background-color: #0038a8;
+    position: sticky;
+    top: 0px;
+}
+
+.table-lista-fichas input[type=checkbox],
+.table-lista-fichas-relatorio input[type=checkbox]{
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.table-lista-fichas tr:nth-child(odd),
+.table-lista-fichas-relatorio tr:nth-child(odd){
+    background-color: #adc7ff;
+    width: auto;
+}
+
+.table-lista-fichas tr:nth-child(even),
+.table-lista-fichas-relatorio tr:nth-child(even){
+    background-color: #e1e9ff;
+    width: auto;
+}
+
+.table-outubro tr:nth-child(odd),
+.table-outubro-relatorio tr:nth-child(odd){
+    background-color: pink;
+    width: 90px;
+}
+
+.table-outubro tr:nth-child(even),
+.table-outubro-relatorio tr:nth-child(even){
+    background-color: pink;
+    width: 90px;
+}
+
+.btn-relatorio {
+    border: 2px solid #0038a8;
+    border-radius: 10px;
+    padding: 10px 15px;
+    width: 200px;
+    background-color: #0038a8;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-relatorio:hover {
+    background-color: #00246d;
+}
+
+.btn-Ptax {
+    border: 2px solid #0038a8;
+    border-radius: 10px;
+    padding: 10px 15px;
+    width: 200px;
+    background-color: #0038a8;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-Ptax:hover {
+    background-color: #00246d;
+}
+
+
+.table-wrapper {
+    overflow-y: hidden;
+    overflow-x: hidden;
+    height: fit-content;
+    max-height: 80vh;
+    width: 100%;
+}
+
+/*  ============================ B O T Õ E S   D E   E D I T A R   E   E X C L U I R ============================ */
+
+.option-btn {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #0038a8;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+}
+
+.option-btn:hover {
+    background-color: #003868;
+    /*border-color: #F9DD16;*/
+}
+
+
+.option-btn:active {
+    border-color: #F9DD16;
+    /*width: 90%*/
+}
+
+.option-btn-img {
+    width: 100%;
+}
+
+.desabilitado {
+    pointer-events: none !important;
+    background-color: dimgrey !important;
+    border: none !important;
+    color: #333333 !important;
+}
+
+.desabilitado:hover {
+    cursor: default;
+    background-color: dimgrey;
+    color: #333333;
+}
+
+/* ============================ M O D A L   E X C L U I R ============================ */
+
+.sobreposicao-tela-preta {
+    width: 100vw;
+    height: 100%;
+    display: none;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    left: 0;
+    top: 0;
+    justify-content: center;
+    align-items: center;
+}
+
+.excluir-confirma {
+    width: 350px;
+    background-color: white;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    gap: 10px;
+}
+
+.excluir-confirma > div {
+    display: flex;
+    justify-content: right;
+    gap: 5px;
+}
+
+.excluir-confirma .exclui {
+    background-color:#b5131d;
+    border: none;
+}
+
+/* ============================ E R R O ============================ */
+
+.article-erro {
+    background-color: #ffffff;
+    width: 500px;
+    margin: auto;
+    padding: 50px 75px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+}
+
+/* ========================== T E L A   D E   L O A D I N G ========================= */
+
+.tela-preta-loading {
+    width: 100vw;
+    height: 100%;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    left: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tela-preta-loading div {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.tela-preta-loading img {
+    width: 100px;
+}
+
+/* ========================== DIFERENÇA FICHA X CONTABIL ========================= */
+
+#container-just{
+   width: auto !important;
+   width: 95%; 
+}
+
+#table-just{
+    width: auto !important;
+    overflow-x: hidden;
+    width: 95%;
+}
+
+/*.justificativa {
+    width: 1100px;
+    height: 150px;
+    padding: 10px;
+    margin-top: 50px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    background-color: #fff5f5;  Fundo claro para contraste 
+}
+
+.just-container {
+    margin-left: 40px;
+    margin-right: 50px;
+    margin-top: 50px;
+    font-family: "BancoDoBrasilRegular", sans-serif;
+    color: #000;  Texto vermelho 
+    background-color: #e1e9ff;  Fundo cinza claro 
+    border: 2px solid #000;  Bordas vermelhas 
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 25px rgba(216, 0, 12, 0.5);  Sombra vermelha 
+}
+
+.just-container:hover {
+    background-color: #c0c0c0;  Muda a cor de fundo ao passar o mouse 
+}*/
+
+/* Clase para alerta para mostrar vermelho a porcentagem se for maior que determinada % */
+.alerta {
+    color: red;
+    font-weight: bold;
+}
+
+/* ================== ESTILOS PARA TABELA DE CONCILIAÇÃO (CONSOLIDADO) ================== */
+
+/* Cores padrão (para todos os meses, exceto outubro) */
+.table-lista-fichas .grupo-par > td {
+    background-color: #e1e9ff; /* Azul claro */
+}
+
+.table-lista-fichas .grupo-impar > td {
+    background-color: #adc7ff; /* Azul um pouco mais escuro */
+}
+
+/* Sobrescreve as cores padrão quando a tabela tiver a classe 'table-outubro-consolidado'.
+   Essa classe será adicionada via JavaScript apenas no mês de outubro.
+*/
+.table-lista-fichas.table-outubro-consolidado .grupo-par > td {
+    background-color: #fae1e5; /* Rosa claro */
+}
+
+.table-lista-fichas.table-outubro-consolidado .grupo-impar > td {
+    background-color: #facad2; /* Rosa um pouco mais escuro */
+}
