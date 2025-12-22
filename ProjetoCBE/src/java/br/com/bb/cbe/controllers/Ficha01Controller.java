@@ -4,6 +4,7 @@ import java.util.Date;
 import br.com.bb.cbe.DAO.Ficha01DAO;
 import br.com.bb.cbe.Bean.Ficha01;
 import br.com.bb.cbe.Bean.Justificativa;
+import br.com.bb.cbe.DAO.PtaxDAO;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import com.google.gson.Gson;
@@ -26,6 +27,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import br.com.bb.cbe.conexao.Conexao;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.io.PrintWriter;
+import com.google.gson.JsonObject;
 
 @WebServlet("/ficha01")
 public class Ficha01Controller extends HttpServlet {
@@ -49,13 +56,18 @@ public class Ficha01Controller extends HttpServlet {
         String tipoRequisicao = req.getParameter("tipo-requisicao");
         HttpSession session = req.getSession();
         String chaveFuncionario = (String) session.getAttribute("chave");
+
         try {
+            // ... (seu código de leitura de JSON existente) ...
             final class Teste {
+
                 String valor;
             }
             Teste justificativaTeste = new Teste();
             List<Map<String, Object>> list = null;
-            if (tipoRequisicao == null) { 
+            if (tipoRequisicao == null) {
+                // ... (lógica de ler JSON do body) ...
+                // (Mantenha seu código de leitura do Gson aqui)
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
@@ -67,23 +79,26 @@ public class Ficha01Controller extends HttpServlet {
                 Type type = new TypeToken<List<Map<String, Object>>>() {
                 }.getType();
                 list = gson.fromJson(json, type);
-                // System.out.println("LISTA: " + list);              
+
                 for (Map<String, Object> map : list) {
                     if (map.containsKey("tipo-requisicao")) {
                         tipoRequisicao = (String) map.get("tipo-requisicao");
-                            break;
+                        break;
                     }
                 }
                 for (Map<String, Object> map : list) {
                     if (map.containsKey("justificativa")) {
                         justificativaTeste.valor = (String) map.get("justificativa");
-                        // System.out.println(justificativaTeste.valor);
-                            break;
+                        break;
                     }
                 }
             }
+
+            // Objeto ficha auxiliar
             Ficha01 ficha = new Ficha01();
-            if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
+
+            // Apenas preenche o objeto se for post ou edit para evitar erros de nulo nas validações
+            if ("post".equals(tipoRequisicao) || "edit".equals(tipoRequisicao)) {
                 int moedaId = Integer.parseInt(req.getParameter("moeda"));
                 int paisId = Integer.parseInt(req.getParameter("pais"));
                 ficha.setMoeda(moedaController.getMoedaById(moedaId));
@@ -92,8 +107,18 @@ public class Ficha01Controller extends HttpServlet {
                 ficha.setDividendos(NumeroUtils.stringToDouble(req.getParameter("dividendos")));
                 ficha.setTrimestre(DataUtils.validaTrimestre());
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
-                ficha.setStatus(statusController.getStatusById(1)); 
+                ficha.setStatus(statusController.getStatusById(1));
+
+                // CAPTURA A JUSTIFICATIVA DO FORMULÁRIO AQUI
+                String just = req.getParameter("justificativa_gestor");
+                if (just != null && !just.isEmpty()) {
+                    ficha.setJustificativaGestor(just);
+                } else {
+                    ficha.setJustificativaGestor(""); // Garante que não vá nulo
+                }
             }
+
+            // ================= AQUI ENTRA O SWITCH CORRIGIDO =================
             switch (tipoRequisicao) {
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
@@ -112,30 +137,79 @@ public class Ficha01Controller extends HttpServlet {
                     String[] idsValidadosArray = req.getParameterValues("idsValidados[]");
                     List<String> idsValidadosList = new ArrayList<>();
                     if (idsValidadosArray != null) {
-                        idsValidadosList = Arrays.asList(idsValidadosArray); 
+                        idsValidadosList = Arrays.asList(idsValidadosArray);
                     }
                     Ficha01DAO.validarFormularios(idsValidadosList, chaveFuncionario);
                     break;
                 case "validacaoBatch":
                     List<String> arrayIdsValidados = processarValidacao(list);
                     Ficha01DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
-                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)){
+                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
                         Justificativa justificativa = processarJustificativa(list, chaveFuncionario);
                         JustificativaController.createBatchJustController(justificativa);
                     }
-                    break;    
-                default:
-                    System.out.println("Tipo de requisição desconhecido");
+                    break;
+
+                // Em Ficha01Controller.java
+
+            case "validar-diferenca":
+                try {
+                    // 1. Recebe valor e moeda do formulário
+                    String valorStr = req.getParameter("valor");
+                    double valorInformado = NumeroUtils.stringToDouble(valorStr);
+                    int idMoeda = Integer.parseInt(req.getParameter("moeda"));
+
+                    // 2. Obtém Trimestre e Ano da Ficha (Vigente)
+                    int trimestreAtual = DataUtils.validaTrimestre();
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    int anoAtual = cal.get(java.util.Calendar.YEAR);
+
+                    // 3. Calcula o Período de REFERÊNCIA para a PTAX
+                    // (A mesma lógica de "voltar um trimestre" que usamos no DAO)
+                    int triReferencia = trimestreAtual - 1;
+                    int anoReferencia = anoAtual;
+                    if (triReferencia == 0) {
+                        triReferencia = 4;
+                        anoReferencia = anoAtual - 1;
+                    }
+
+                    double taxaPtax = PtaxDAO.getTaxaCompra(idMoeda, triReferencia, anoReferencia);
+                    
+                    double valorConvertidoBrl = valorInformado * taxaPtax;
+
+                    // Debug no Console
+                    System.out.println(">>> CONVERSAO CONTROLLER <<<");
+                    System.out.println("Moeda ID: " + idMoeda + " | Taxa PTAX (Tri " + triReferencia + "): " + taxaPtax);
+                    System.out.println("Valor Original: " + valorInformado + " -> Convertido BRL: " + valorConvertidoBrl);
+
+                    // 5. Chama o DAO passando o valor JÁ CONVERTIDO em Reais
+                    boolean precisa = Ficha01DAO.verificarNecessidadeJustificativa(valorConvertidoBrl, trimestreAtual, anoAtual);
+
+                    // 6. Retorno
+                    resp.setContentType("application/json");
+                    resp.setCharacterEncoding("UTF-8");
+                    PrintWriter out = resp.getWriter();
+                    out.print("{\"precisaJustificar\": " + precisa + "}");
+                    out.flush();
+                    return; 
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // Retorna JSON simples de erro
+                    resp.setContentType("application/json");
+                    resp.getWriter().write("{\"precisaJustificar\": false}"); 
+                }
+                break;
             }
-            
             if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
-                    resp.setStatus(HttpServletResponse.SC_CREATED);
-                    resp.setHeader("Content-Type", "application/json");
-                    resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha01.jsp\"}");
-                    return;
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.setHeader("Content-Type", "application/json");
+                resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha01.jsp\"}");
+                return;
             }
-            
+
             resp.sendRedirect("views/ficha01.jsp");
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
             req.setAttribute("mensagemErro", "O valor foi inserido em um formato inválido.");

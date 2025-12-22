@@ -16,7 +16,7 @@ public class ConsolidadoDAO {
         PreparedStatement pst = null;
         ResultSet rs = null;
 
-        String query = "SELECT * FROM 4010_cosif_rubrica_06_25";
+        String query = "SELECT * FROM planilha4010";
 
         try {
             conn = Conexao.conectar();
@@ -44,7 +44,7 @@ public class ConsolidadoDAO {
         PreparedStatement pst = null;
         ResultSet rs = null;
 
-        String query = "SELECT CONSOLIDADO FROM 4010_cosif_rubrica_06_25 WHERE CD_CT_PLN = ?";
+        String query = "SELECT CONSOLIDADO FROM planilha4010 WHERE CD_CT_PLN = ?";
 
         try {
             conn = Conexao.conectar();
@@ -84,7 +84,7 @@ public class ConsolidadoDAO {
                 "  c.nome_ficha,\n" +
                 "  SUM(COALESCE(r.CONSOLIDADO, 0)) AS total_consolidado\n" +
                 "FROM consolidado c\n" +
-                "LEFT JOIN 4010_cosif_rubrica_06_25 r \n" +
+                "LEFT JOIN planilha4010 r \n" +
                 "  ON r.CD_CT_PLN = c.cosif \n" + // CORREÇÃO 1: Igualdade estrita
                 "  AND r.CD_IOR = c.CD_IOR\n" +   // CORREÇÃO 2: Filtra IOR igual
                 "  AND r.CD_RBC = c.CD_RBC\n" +   // CORREÇÃO 3: Filtra RBC igual
@@ -219,7 +219,7 @@ public class ConsolidadoDAO {
 
         // Pega Ano e Trimestre (baseado no mês) das datas que existem
         String query = "SELECT DISTINCT YEAR(DT_EVD) as ano, QUARTER(DT_EVD) as tri " +
-                       "FROM 4010_cosif_rubrica_06_25 " +
+                       "FROM planilha4010 " +
                        "ORDER BY ano DESC, tri DESC";
 
         try {

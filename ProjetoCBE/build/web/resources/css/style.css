@@ -404,6 +404,47 @@ a {
     color: #a71d2a; /* Vermelho mais escuro ao passar o mouse */
 }
 
+
+.btn-secondary {
+  background-color: #e6e6e6;
+  color: #333333;
+  border: 1px solid #cfcfcf;
+  padding: 10px 15px;      
+  border-radius: 5px;       
+  font-weight: bold;        
+  line-height: 1; 
+  text-decoration: none;
+  appearance: none;
+}
+
+.btn-secondary:hover {
+  background-color: #d9d9d9;
+}
+
+.btn-secondary:focus {
+  outline: 2px solid #87CEFA;
+  outline-offset: 2px;
+}
+
+/* Container dos botões do modal */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;   /* mesma altura para ambos */
+  justify-content: flex-end; /* ALINHAR À DIREITA */
+  width: 100%;            /* ocupa toda a largura do modal */
+  flex-wrap: wrap;        /* se faltar espaço, quebra linha sem sobrepor */
+}
+
+/* Garante alinhamento vertical e neutraliza floats locais */
+.modal-actions > .btn,
+.modal-actions > .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  float: none;            /* evita herdar algum float */
+}
+
 /* ============================ TESTE DA FICHA 11 =====================*/
 .container11 {
     padding: 20px;

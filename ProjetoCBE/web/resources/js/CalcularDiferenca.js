@@ -362,4 +362,75 @@ function getContabilByFicha(numFicha, info){
     return contabil;
 }
 
+$(document).ready(function() {
+    // Intercepta o clique no botão Salvar
+    $('#salvar').click(function(e) {
+        e.preventDefault(); // Impede o envio imediato
+        
+        var form = $(this).closest('form');
+        var valorInput = $('#valor').val();
+        var moedaId = $('#moeda').val();
+        var paisId = $('#pais').val();
 
+        // Validação básica de preenchimento
+        if (!valorInput || !moedaId || !paisId) {
+            alert("Por favor, preencha todos os campos obrigatórios.");
+            return;
+        }
+
+        // Chamada AJAX para o Controller realizar a validação segura
+        $.ajax({
+            type: "POST",
+            url: "../ficha01", // Mapeamento do Servlet
+            data: {
+                "tipo-requisicao": "validar-diferenca",
+                "valor": valorInput,
+                "moeda": moedaId
+            },
+            dataType: "json",
+            success: function(response) {
+                if (response.precisaJustificar) {
+                    // Exibe o Modal se a diferença for > 0.5%
+                    $('#modalJustificativa').show();
+                } else {
+                    // Se não precisar justificar, envia o formulário normalmente
+                    enviarFormulario(form);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Erro na validação:", error);
+                // Em caso de erro técnico, decide se bloqueia ou permite (aqui permitindo com aviso)
+                alert("Erro ao validar dados no servidor. O formulário será enviado.");
+                enviarFormulario(form);
+            }
+        });
+    });
+
+    // Ação do botão "Confirmar" no Modal
+    $('#btnConfirmarJustificativa').click(function() {
+        var textoJustificativa = $('#textoJustificativa').val().trim();
+        
+        if (textoJustificativa === "") {
+            alert("É obrigatório informar uma justificativa para prosseguir.");
+            return;
+        }
+
+        // Preenche o campo oculto no formulário principal e envia
+        $('#hiddenJustificativa').val(textoJustificativa);
+        $('#modalJustificativa').hide();
+        
+        var form = $('.form'); // Seleciona o formulário pela classe
+        enviarFormulario(form);
+    });
+
+    // Ação do botão "Cancelar" no Modal
+    $('#btnCancelarJustificativa').click(function() {
+        $('#modalJustificativa').hide();
+        $('#textoJustificativa').val(''); // Limpa o campo
+    });
+});
+
+function enviarFormulario(form) {
+    // Remove o listener de click para evitar loop e submete
+    form.off('submit').submit();
+}

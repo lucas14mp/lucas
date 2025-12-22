@@ -323,5 +323,43 @@ public class PtaxDAO {
         }
         return taxas;
     }
+    
+    // Adicione este método ao final de PtaxDAO.java (dentro da classe)
+
+    public static double getTaxaCompra(int idMoeda, int trimestre, int ano) {
+        // Se for Real (ID 16), a taxa é sempre 1
+        if (idMoeda == 16) { 
+            return 1.0; 
+        }
+
+        double taxa = 0.0;
+        Connection conn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        
+        // Busca a taxa de COMPRA para a moeda no trimestre/ano de referência
+        String sql = "SELECT compra FROM ptax WHERE id_moeda = ? AND trimestre = ? AND YEAR(data_criacao) = ?";
+
+        try {
+            conn = Conexao.conectar();
+            pst = conn.prepareStatement(sql);
+            pst.setInt(1, idMoeda);
+            pst.setInt(2, trimestre);
+            pst.setInt(3, ano);
+            
+            rs = pst.executeQuery();
+            if (rs.next()) {
+                taxa = rs.getDouble("compra");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(conn, pst, rs);
+        }
+        
+        // Se não achar taxa (0.0), retorna 1.0 para não zerar o valor, 
+        // mas idealmente deveria ter taxa cadastrada.
+        return (taxa > 0) ? taxa : 1.0; 
+    }
 
 }

@@ -31,7 +31,7 @@
                 </p>
                 <br>
                 <p><b>(<span class="asterisco">*</span>) Obrigatória</b></p>
-                <form action="<%=request.getContextPath()%>/ficha01" method="post" class="form">
+                <form action="<%=request.getContextPath()%>/ficha01" method="post" class="form" id="formFicha01">
                     <input type="text" name="tipo-requisicao" value="post" hidden>
                     <div class="label-container">
                         <label for="pais">Mercado de negociação: <span class="asterisco">*</span></label>
@@ -72,9 +72,31 @@
                         <input class="input-moedas" type="text" name="dividendos" required id="dividendos" placeholder="Digite um valor maior ou igual a 0" pattern="^(?!.*[.,]$)(?!^[.,])(?!.*[.,]{2})(0*(\.\d+)*|0*[1-9]\d*(\.\d+)*)(,\d+)?$">
                     </div>
                     <input type="submit" value="Salvar" class="btn salvar" id="salvar">
+                    <input type="hidden" name="justificativa_gestor" id="hiddenJustificativa" value="">
+
+                    <div id="modalJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">
+                        <div style="background-color:#fff; margin:10% auto; padding:25px; border:1px solid #888; width:50%; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align:center; font-family: Arial, sans-serif;">
+
+                            <h2 style="color: #003366; margin-bottom: 15px;">Aviso de Variação</h2>
+
+                            <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                                A diferença entre o valor informado e o valor de referência na base de dados é muito divergente.
+                                <br><br>
+                                Para prosseguir com o envio desta ficha, é <strong>obrigatório</strong> justificar o motivo desta divergência.
+                            </p>
+
+                            <textarea id="textoJustificativa" rows="5" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; resize:vertical;" placeholder="Digite aqui sua justificativa detalhada..."></textarea>
+
+                            <div class="modal-actions">
+                                <button type="button" id="btnConfirmarJustificativa" class="btn">Confirmar e Salvar</button>
+                                <button type="button" id="btnCancelarJustificativa" class="btn-secondary">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </article>
         </main>
+        <script src="${pageContext.request.contextPath}/resources/js/CalcularDiferenca.js"></script>                       
         <script src="/ProjetoCBE/resources/js/temas.js"></script>
         <script src="/ProjetoCBE/resources/js/moedas.js"></script>
     </body>

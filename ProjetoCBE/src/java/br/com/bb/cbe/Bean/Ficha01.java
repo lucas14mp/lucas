@@ -13,6 +13,7 @@ public class Ficha01 {
     private int trimestre;
     private Status status;
     private Funcionario funcionario;
+    private String justificativaGestor;
 
     public Ficha01() {
     }
@@ -98,5 +99,13 @@ public class Ficha01 {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+    
+    public String getJustificativaGestor() {
+        return justificativaGestor;
+    }
+
+    public void setJustificativaGestor(String justificativaGestor) {
+        this.justificativaGestor = justificativaGestor;
     }
 }

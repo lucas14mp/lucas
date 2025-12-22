@@ -72,17 +72,17 @@ public class UploadTabela4010Controller extends HttpServlet {
             }
 
             // --- 2. LIMPEZAS ---
-            stmtLimpeza = conn.prepareStatement("DELETE FROM `4010_cosif_rubrica_06_25` WHERE DT_EVD < DATE_SUB(NOW(), INTERVAL 3 YEAR)");
+            stmtLimpeza = conn.prepareStatement("DELETE FROM `planilha4010` WHERE DT_EVD < DATE_SUB(NOW(), INTERVAL 3 YEAR)");
             stmtLimpeza.executeUpdate();
 
             if (dataRef != null) {
-                stmtLimpaMes = conn.prepareStatement("DELETE FROM `4010_cosif_rubrica_06_25` WHERE DT_EVD = ?");
+                stmtLimpaMes = conn.prepareStatement("DELETE FROM `planilha4010` WHERE DT_EVD = ?");
                 stmtLimpaMes.setDate(1, dataRef);
                 stmtLimpaMes.executeUpdate();
             }
 
             // --- 3. INSERT (Sem forçar tipos no Java) ---
-            String sqlInsert = "INSERT INTO `4010_cosif_rubrica_06_25` "
+            String sqlInsert = "INSERT INTO `planilha4010` "
                     + "(DT_EVD, CD_GR, CD_IOR, CD_CT_PLN, CD_RBC, NM, CD_TIP_MVT, AGLUTINADO, ELIMINADO, CONSOLIDADO) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
