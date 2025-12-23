@@ -19,7 +19,7 @@ public class Ficha16DAO {
 
     public static void create(Ficha16 ficha) {
 
-        String sql = "INSERT INTO ficha16 (id_pais, id_moeda, tipo_outros_direitos, valor_database, data_criacao, trimestre, chave, id_status) VALUES (?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO ficha16 (id_pais, id_moeda, tipo_outros_direitos, valor_database, data_criacao, trimestre, chave, id_status, justificativa_gestor) VALUES (?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -33,6 +33,7 @@ public class Ficha16DAO {
             pst.setInt(6, ficha.getTrimestre());
             pst.setString(7, ficha.getFuncionario().getChave());
             pst.setInt(8, ficha.getStatus().getId());
+            pst.setString(9, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -164,6 +165,7 @@ public class Ficha16DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
 
                 listaFichas.add(ficha);
             }
@@ -234,10 +236,6 @@ public class Ficha16DAO {
             Conexao.fecharConexao(connection, pst, null);
         }
     }
-
-    // ========================================================================
-    // NOVOS MÉTODOS PARA OS FILTROS PARCIAIS
-    // ========================================================================
 
     public static List<Integer> getAnosExistentes() {
         List<Integer> anos = new ArrayList<>();
@@ -364,4 +362,75 @@ public class Ficha16DAO {
         }
         return listaFichas;
     }
+
+    public static boolean verificarNecessidadeJustificativa(double valorInformadoOriginal, int trimestreFicha, int anoFicha) {
+        Connection connection = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        boolean precisaJustificar = false;
+
+        int triReferencia = trimestreFicha - 1;
+        int anoReferencia = anoFicha;
+
+        // Ajusta se for primeiro trimestre (vira 4º tri do ano anterior)
+        if (triReferencia == 0) {
+            triReferencia = 4;
+            anoReferencia = anoFicha - 1;
+        }
+
+        try {
+            connection = Conexao.conectar();
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT SUM(COALESCE(r.CONSOLIDADO, 0)) as total_consolidado ");
+            sql.append("FROM consolidado c ");
+            sql.append("LEFT JOIN planilha4010 r ON r.CD_CT_PLN = c.cosif AND r.CD_IOR = c.CD_IOR AND r.CD_RBC = c.CD_RBC ");
+            sql.append("AND QUARTER(r.DT_EVD) = ? AND YEAR(r.DT_EVD) = ? ");
+            sql.append("WHERE c.ficha = '16' ");
+
+            pst = connection.prepareStatement(sql.toString());
+            pst.setInt(1, triReferencia);
+            pst.setInt(2, anoReferencia);
+            rs = pst.executeQuery();
+
+            double valorPlanilhaBrl = 0.0;
+            if (rs.next()) {
+                valorPlanilhaBrl = rs.getDouble("total_consolidado");
+            }
+
+            // Só validamos a diferença SE o banco tiver algum valor histórico (> 0).
+            // Se o banco retornar 0 (novo aporte ou sem dados), aceitamos o valor informado sem pedir justificativa.
+            if (valorPlanilhaBrl != 0) {
+                double diferenca = Math.abs(valorInformadoOriginal - valorPlanilhaBrl);
+                // Se a diferença for maior que 0.5%
+                if ((diferenca / valorPlanilhaBrl) * 100 > 0.5) {
+                    precisaJustificar = true;
+                }
+            }
+            // REMOVIDO O "else if (valorInformadoOriginal != 0)" QUE FORÇAVA A JUSTIFICATIVA
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
+        }
+        return precisaJustificar;
+    }
+    
+    public static void alterarStatus(int id, int novoStatus) {
+        String sql = "UPDATE ficha16 SET id_status = ? WHERE id = ?";
+        Connection connection = null;
+        PreparedStatement pst = null;
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, novoStatus);
+            pst.setInt(2, id);
+            pst.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
+    }
+    
 }

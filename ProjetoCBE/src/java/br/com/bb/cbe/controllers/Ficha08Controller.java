@@ -1,9 +1,10 @@
 package br.com.bb.cbe.controllers;
 
 import java.util.Date;
+import br.com.bb.cbe.DAO.Ficha08DAO;
 import br.com.bb.cbe.Bean.Ficha08;
 import br.com.bb.cbe.Bean.Justificativa;
-import br.com.bb.cbe.DAO.Ficha08DAO;
+import br.com.bb.cbe.DAO.PtaxDAO;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import com.google.gson.Gson;
@@ -16,16 +17,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpSession;
+import br.com.bb.cbe.conexao.Conexao;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.io.PrintWriter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 @WebServlet("/ficha08")
 public class Ficha08Controller extends HttpServlet {
@@ -44,52 +54,81 @@ public class Ficha08Controller extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF8");
         String tipoRequisicao = req.getParameter("tipo-requisicao");
         HttpSession session = req.getSession();
-        String chaveFuncionario = (String) session.getAttribute("chave");           
+        String chaveFuncionario = (String) session.getAttribute("chave");
+
+        JsonObject jsonBodyObject = null;
+        List<Map<String, Object>> jsonBodyList = null;
+        final class Teste { String valor; }
+        Teste justificativaTeste = new Teste();
+
         try {
-            final class Teste {
-                String valor;
-            }
-            Teste justificativaTeste = new Teste();
-            List<Map<String, Object>> list = null;
-            if (tipoRequisicao == null) { 
+            // Leitura do JSON (Lote ou Lista Antiga)
+            if (tipoRequisicao == null) {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                String json = sb.toString();
-                Gson gson = new Gson();
-                Type type = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
-                list = gson.fromJson(json, type);
-                // System.out.println("LISTA: " + list);              
-                
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("tipo-requisicao")) {
-                        tipoRequisicao = (String) map.get("tipo-requisicao");
-                            break;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                String json = sb.toString().trim();
+
+                if (!json.isEmpty()) {
+                    if (json.startsWith("{")) {
+                        jsonBodyObject = JsonParser.parseString(json).getAsJsonObject();
+                        if (jsonBodyObject.has("tipo-requisicao")) {
+                            tipoRequisicao = jsonBodyObject.get("tipo-requisicao").getAsString();
+                        }
+                    } else if (json.startsWith("[")) {
+                        Gson gson = new Gson();
+                        Type type = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                        jsonBodyList = gson.fromJson(json, type);
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("tipo-requisicao")) {
+                                tipoRequisicao = (String) map.get("tipo-requisicao"); break;
+                            }
+                        }
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("justificativa")) {
+                                justificativaTeste.valor = (String) map.get("justificativa"); break;
+                            }
+                        }
                     }
-                }             
+                }
             }
+
             Ficha08 ficha = new Ficha08();
-            if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
+            // Preenchimento para requests via formulário padrão (não JSON)
+            if ("post".equals(tipoRequisicao) || "edit".equals(tipoRequisicao)) {
                 int moedaId = Integer.parseInt(req.getParameter("moeda"));
                 int paisId = Integer.parseInt(req.getParameter("pais"));
+                
                 ficha.setMoeda(moedaController.getMoedaById(moedaId));
                 ficha.setPais(paisController.getPaisById(paisId));
-                ficha.setSaldoDatabase(NumeroUtils.stringToDouble(req.getParameter("saldo")));
+                ficha.setSaldoDatabase(NumeroUtils.stringToDouble(req.getParameter("valor")));
+                
+                // CORREÇÃO: Usando "rendimentos" conforme o formulário da Ficha 08
                 ficha.setRendimentos(NumeroUtils.stringToDouble(req.getParameter("rendimentos")));
-                ficha.setDataCriacao(new Date());
+                
+                ficha.setTrimestre(DataUtils.validaTrimestre());
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
                 ficha.setStatus(statusContoller.getStatusById(1)); 
-                ficha.setTrimestre(DataUtils.validaTrimestre());
+                
+                String just = req.getParameter("justificativa_gestor");
+                if(just != null && !just.isEmpty()) ficha.setJustificativaGestor(just);
+                else ficha.setJustificativaGestor("");
             }
+
+            if (tipoRequisicao == null) tipoRequisicao = "";
+
             switch (tipoRequisicao) {
+                case "recusar":
+                    int idRecusar = Integer.parseInt(req.getParameter("id"));
+                    // Chama o DAO para mudar o status para 1
+                    Ficha08DAO.alterarStatus(idRecusar, 1);
+                    resp.setStatus(200);
+                    return;
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
                     Ficha08DAO.delete(id);
@@ -106,39 +145,120 @@ public class Ficha08Controller extends HttpServlet {
                 case "validacao":
                     String[] idsValidadosArray = req.getParameterValues("idsValidados[]");
                     List<String> idsValidadosList = new ArrayList<>();
-                    if (idsValidadosArray != null) {
-                        idsValidadosList = Arrays.asList(idsValidadosArray);
-                    }
+                    if (idsValidadosArray != null) idsValidadosList = Arrays.asList(idsValidadosArray);
                     Ficha08DAO.validarFormularios(idsValidadosList, chaveFuncionario);
                     break;
                 case "validacaoBatch":
-                    List<String> arrayIdsValidados = processarValidacao(list);
-                    Ficha08DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
-                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)){
-                        Justificativa justificativa = processarJustificativa(list, chaveFuncionario);
-                        JustificativaController.createBatchJustController(justificativa);
+                    if (jsonBodyList != null) {
+                        List<String> arrayIdsValidados = processarValidacao(jsonBodyList);
+                        Ficha08DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
+                        if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
+                            Justificativa justificativa = processarJustificativa(jsonBodyList, chaveFuncionario);
+                            JustificativaController.createBatchJustController(justificativa);
+                        }
                     }
-                    break;    
-                default:
-                    System.out.println("Tipo de requisição desconhecido");
-            }
-            
-            if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
-                    resp.setStatus(HttpServletResponse.SC_CREATED);
-                    resp.setHeader("Content-Type", "application/json");
-                    resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha08.jsp\"}");
+                    break;
+
+                // --- FLUXOS DE LOTE (FICHA 08) ---
+                case "validar-lote":
+                    validarLote(jsonBodyObject, resp);
+                    return; 
+
+                case "salvar-lote":
+                    salvarLote(jsonBodyObject, chaveFuncionario);
+                    resp.setStatus(200); 
                     return;
             }
-            
+
+            if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.setHeader("Content-Type", "application/json");
+                resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha08.jsp\"}");
+                return;
+            }
             resp.sendRedirect("views/ficha08.jsp");
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            req.setAttribute("mensagemErro", "O valor foi inserido em um formato inválido.");
+            req.setAttribute("mensagemErro", "Valor inválido.");
             req.setAttribute("linkPaginaAnterior", "/ProjetoCBE/forms/ficha08.jsp");
             RequestDispatcher dispatcher = req.getRequestDispatcher("/errors/customError.jsp");
             dispatcher.forward(req, resp);
         } catch (RuntimeException e) {
             e.printStackTrace();
+        }
+    }
+
+    // --- MÉTODOS AUXILIARES ---
+
+    private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        JsonArray itens = json.getAsJsonArray("itens");
+        double somaTotalConvertidaBrl = 0.0;
+
+        int trimestreAtual = DataUtils.validaTrimestre();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int anoAtual = cal.get(java.util.Calendar.YEAR);
+        
+        int triRef = trimestreAtual - 1;
+        int anoRef = anoAtual;
+        if (triRef == 0) { triRef = 4; anoRef = anoAtual - 1; }
+
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            String valorStr = item.get("valor").getAsString();
+            double valorOriginal = NumeroUtils.stringToDouble(valorStr);
+            int idMoeda = Integer.parseInt(item.get("id_moeda").getAsString());
+
+            double taxa = PtaxDAO.getTaxaCompra(idMoeda, triRef, anoRef);
+            somaTotalConvertidaBrl += (valorOriginal * taxa);
+        }
+
+        boolean precisa = Ficha08DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, trimestreAtual, anoAtual);
+
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
+    }
+
+    private void salvarLote(JsonObject json, String chaveFuncionario) {
+        JsonArray itens = json.getAsJsonArray("itens");
+        String justificativa = "";
+        if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
+            justificativa = json.get("justificativa").getAsString();
+        }
+
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            Ficha08 ficha = new Ficha08();
+            
+            ficha.setSaldoDatabase(NumeroUtils.stringToDouble(item.get("valor").getAsString()));
+            
+            // CORREÇÃO: Lê 'rendimentos' do JSON (deve bater com o JS)
+            // Se o JS mandar 'dividendos', altere aqui para 'dividendos'.
+            // Sugiro alterar o JS para enviar 'rendimentos' para ficar tudo igual.
+            // Aqui estou assumindo que você ajustou o JS para enviar 'rendimentos' ou 'dividendos'.
+            // Pelo seu JSP, o name é 'rendimentos'.
+            if(item.has("rendimentos")) {
+                ficha.setRendimentos(NumeroUtils.stringToDouble(item.get("rendimentos").getAsString()));
+            } else if(item.has("dividendos")) {
+                // Fallback caso o JS ainda mande dividendos
+                ficha.setRendimentos(NumeroUtils.stringToDouble(item.get("dividendos").getAsString()));
+            }
+            
+            int moedaId = Integer.parseInt(item.get("id_moeda").getAsString());
+            int paisId = Integer.parseInt(item.get("id_pais").getAsString());
+            
+            ficha.setMoeda(moedaController.getMoedaById(moedaId));
+            ficha.setPais(paisController.getPaisById(paisId));
+            
+            ficha.setTrimestre(DataUtils.validaTrimestre());
+            ficha.setDataCriacao(new java.util.Date());
+            ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
+            ficha.setStatus(statusContoller.getStatusById(1));
+            
+            ficha.setJustificativaGestor(justificativa);
+
+            Ficha08DAO.create(ficha);
         }
     }
 

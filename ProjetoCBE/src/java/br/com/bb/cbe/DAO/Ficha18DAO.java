@@ -19,47 +19,47 @@ public class Ficha18DAO {
 
     public static void create(Ficha18 ficha) {
 
-        String sql = "INSERT INTO ficha18 (id_pais, id_moeda, prazo_divida, valor_mercado, juros_recebidos, data_criacao, trimestre, chave, id_status) VALUES (?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO ficha18 (prazo_divida, valor_mercado, juros_recebidos, data_criacao, trimestre, id_moeda, id_pais, chave, id_status, justificativa_gestor) VALUES (?,?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setInt(1, ficha.getPais().getId());
-            pst.setInt(2, ficha.getMoeda().getId());
-            pst.setString(3, ficha.getPrazoDivida());
-            pst.setDouble(4, ficha.getValorMercado());
-            pst.setDouble(5, ficha.getJurosRecebidos());
-            pst.setDate(6, new java.sql.Date(ficha.getDataCriacao().getTime()));
-            pst.setInt(7, ficha.getTrimestre());
+            pst.setString(1, ficha.getPrazoDivida());
+            pst.setDouble(2, ficha.getValorMercado());
+            pst.setDouble(3, ficha.getJurosRecebidos());
+            pst.setDate(4, new java.sql.Date(ficha.getDataCriacao().getTime()));
+            pst.setInt(5, ficha.getTrimestre());
+            pst.setInt(6, ficha.getMoeda().getId());
+            pst.setInt(7, ficha.getPais().getId());
             pst.setString(8, ficha.getFuncionario().getChave());
             pst.setInt(9, ficha.getStatus().getId());
+            pst.setString(10, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
-
         } finally {
             Conexao.fecharConexao(connection, pst, null);
         }
-
     }
 
     public static void update(Ficha18 ficha) {
-
-        String sql = "UPDATE ficha18 SET id_pais = ?, id_moeda = ?, prazo_divida = ?, valor_mercado = ?, juros_recebidos = ?, chave = ?, data_criacao = ? WHERE id = ?";
+        
+        String sql = "UPDATE ficha18 SET prazo_divida=?, valor_mercado=?, juros_recebidos=?, data_criacao=?, id_moeda=?, id_pais=?, chave=?, justificativa_gestor=? WHERE id=?";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setInt(1, ficha.getPais().getId());
-            pst.setInt(2, ficha.getMoeda().getId());
-            pst.setString(3, ficha.getPrazoDivida());
-            pst.setDouble(4, ficha.getValorMercado());
-            pst.setDouble(5, ficha.getJurosRecebidos());
-            pst.setString(6, ficha.getFuncionario().getChave());
-            pst.setDate(7, new java.sql.Date(ficha.getDataCriacao().getTime()));
-            pst.setInt(8, ficha.getId());
+            pst.setString(1, ficha.getPrazoDivida());
+            pst.setDouble(2, ficha.getValorMercado());
+            pst.setDouble(3, ficha.getJurosRecebidos());
+            pst.setDate(4, new java.sql.Date(ficha.getDataCriacao().getTime()));
+            pst.setInt(5, ficha.getMoeda().getId());
+            pst.setInt(6, ficha.getPais().getId());
+            pst.setString(7, ficha.getFuncionario().getChave());
+            pst.setString(8, ficha.getJustificativaGestor());
+            pst.setInt(9, ficha.getId());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -158,6 +158,7 @@ public class Ficha18DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -227,10 +228,6 @@ public class Ficha18DAO {
             Conexao.fecharConexao(connection, pst, null);
         }
     }
-
-    // ========================================================================
-    // NOVOS MÉTODOS PARA OS FILTROS PARCIAIS
-    // ========================================================================
 
     public static List<Integer> getAnosExistentes() {
         List<Integer> anos = new ArrayList<>();
@@ -359,4 +356,67 @@ public class Ficha18DAO {
         }
         return listaFichas;
     }
+    
+    public static boolean verificarNecessidadeJustificativa(double valorInformadoOriginal, int trimestreFicha, int anoFicha) {
+        Connection connection = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        boolean precisaJustificar = false;
+
+        int triReferencia = trimestreFicha - 1;
+        int anoReferencia = anoFicha;
+
+        // Ajusta se for primeiro trimestre (vira 4º tri do ano anterior)
+        if (triReferencia == 0) {
+            triReferencia = 4;
+            anoReferencia = anoFicha - 1;
+        }
+
+        try {
+            connection = Conexao.conectar();
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT SUM(COALESCE(r.CONSOLIDADO, 0)) as total_consolidado ");
+            sql.append("FROM consolidado c ");
+            sql.append("LEFT JOIN planilha4010 r ON r.CD_CT_PLN = c.cosif AND r.CD_IOR = c.CD_IOR AND r.CD_RBC = c.CD_RBC ");
+            sql.append("AND QUARTER(r.DT_EVD) = ? AND YEAR(r.DT_EVD) = ? ");
+            sql.append("WHERE c.ficha = '18' "); // Ficha 18
+
+            pst = connection.prepareStatement(sql.toString());
+            pst.setInt(1, triReferencia);
+            pst.setInt(2, anoReferencia);
+            rs = pst.executeQuery();
+
+            double valorPlanilhaBrl = 0.0;
+            if (rs.next()) valorPlanilhaBrl = rs.getDouble("total_consolidado");
+
+            if (valorPlanilhaBrl != 0) {
+                double diferenca = Math.abs(valorInformadoOriginal - valorPlanilhaBrl);
+                if ((diferenca / valorPlanilhaBrl) * 100 > 0.5) precisaJustificar = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
+        }
+        return precisaJustificar;
+    }
+    
+    public static void alterarStatus(int id, int novoStatus) {
+        String sql = "UPDATE ficha18 SET id_status = ? WHERE id = ?";
+        Connection connection = null;
+        PreparedStatement pst = null;
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, novoStatus);
+            pst.setInt(2, id);
+            pst.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
+    }
+    
 }

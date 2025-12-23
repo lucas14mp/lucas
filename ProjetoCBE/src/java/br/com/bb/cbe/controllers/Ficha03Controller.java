@@ -118,6 +118,12 @@ protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws S
             if (tipoRequisicao == null) tipoRequisicao = "";
 
             switch (tipoRequisicao) {
+                case "recusar":
+                    int idRecusar = Integer.parseInt(req.getParameter("id"));
+                    // Chama o DAO para mudar o status para 1
+                    Ficha03DAO.alterarStatus(idRecusar, 1);
+                    resp.setStatus(200);
+                    return;
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
                     Ficha03DAO.delete(id);

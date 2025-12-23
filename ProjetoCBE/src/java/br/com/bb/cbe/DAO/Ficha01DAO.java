@@ -153,6 +153,7 @@ public class Ficha01DAO {
                 ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -421,36 +422,55 @@ public static boolean verificarNecessidadeJustificativa(double valorInformadoOri
                 
                 // Diagnóstico rápido se não achar dados
                 verificarDadosDisponiveis(connection);
-            } else {
-                System.out.println(">> STATUS: OK (Ambos zerados).");
+                } else {
+                    System.out.println(">> STATUS: OK (Ambos zerados).");
+                }
             }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
         }
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-    } finally {
-        Conexao.fecharConexao(connection, pst, rs);
+        return precisaJustificar;
     }
 
-    return precisaJustificar;
-}
-
 // Método auxiliar apenas para mostrar no log quais datas existem (ajuda muito a debuggar)
-private static void verificarDadosDisponiveis(Connection conn) {
-    try {
-        String sqlCheck = "SELECT r.DT_EVD FROM planilha4010 r " +
-                          "JOIN consolidado c ON r.CD_CT_PLN = c.cosif " +
-                          "WHERE c.ficha = '1' LIMIT 1"; // Busca qualquer registro da ficha 1
-        PreparedStatement pst = conn.prepareStatement(sqlCheck);
-        ResultSet rs = pst.executeQuery();
-        if (rs.next()) {
-            System.out.println("   [Diagnostico] Existem dados para Ficha 1 na data: " + rs.getDate("DT_EVD"));
-            System.out.println("   -> Se essa data nao for a que voce busca, carregue a planilha do trimestre correto.");
-        } else {
-            System.out.println("   [Diagnostico] NENHUM dado encontrado para Ficha 1 em data nenhuma.");
+    private static void verificarDadosDisponiveis(Connection conn) {
+        try {
+            String sqlCheck = "SELECT r.DT_EVD FROM planilha4010 r "
+                    + "JOIN consolidado c ON r.CD_CT_PLN = c.cosif "
+                    + "WHERE c.ficha = '1' LIMIT 1"; // Busca qualquer registro da ficha 1
+            PreparedStatement pst = conn.prepareStatement(sqlCheck);
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                System.out.println("   [Diagnostico] Existem dados para Ficha 1 na data: " + rs.getDate("DT_EVD"));
+                System.out.println("   -> Se essa data nao for a que voce busca, carregue a planilha do trimestre correto.");
+            } else {
+                System.out.println("   [Diagnostico] NENHUM dado encontrado para Ficha 1 em data nenhuma.");
+            }
+            rs.close();
+            pst.close();
+        } catch (Exception e) {
         }
-        rs.close(); pst.close();
-    } catch (Exception e) {}
-}
+    }
+    
+    public static void alterarStatus(int id, int novoStatus) {
+        String sql = "UPDATE ficha01 SET id_status = ? WHERE id = ?";
+        Connection connection = null;
+        PreparedStatement pst = null;
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, novoStatus);
+            pst.setInt(2, id);
+            pst.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
+    }
     
 }

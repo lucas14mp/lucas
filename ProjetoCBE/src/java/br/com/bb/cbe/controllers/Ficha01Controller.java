@@ -135,7 +135,12 @@ public class Ficha01Controller extends HttpServlet {
             if (tipoRequisicao == null) tipoRequisicao = ""; // Evita NullPointer no switch
 
             switch (tipoRequisicao) {
-                // --- FLUXOS ANTIGOS/PADRÃO ---
+                case "recusar":
+                    int idRecusar = Integer.parseInt(req.getParameter("id"));
+                    // Chama o DAO para mudar o status para 1
+                    Ficha01DAO.alterarStatus(idRecusar, 1);
+                    resp.setStatus(200);
+                    return;
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
                     Ficha01DAO.delete(id);

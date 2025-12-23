@@ -121,6 +121,7 @@
                         <th>Dividendos recebidos</th>
                         <th>Última atualização</th>
                         <th>Funcionário</th>
+                        <th>Justificativa</th>
                     </tr>
                     <c:forEach items="${ficha01Controller.getAllFichasByTrimestreAno(trimestre, ano)}" var="ficha">
                         <tr>
@@ -134,6 +135,16 @@
                                 ${ficha.getFuncionario().getNome()}
                                 <br>
                                 ${ficha.getFuncionario().getDependencia().getNome()}
+                            </td>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <c:choose>
+                                    <c:when test="${not empty ficha.justificativaGestor}">
+                                        <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                             style="cursor: pointer; width: 24px;"
+                                             onclick="verJustificativa('<c:out value="${ficha.justificativaGestor}"/>', ${ficha.id}, 'ficha01')">
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
                             </td>
                         </tr>
                     </c:forEach>
@@ -192,6 +203,7 @@
                         <th>Valor</th>
                         <th>Última atualização</th>
                         <th>Funcionário</th>
+                        <th>Justificativa</th>
                     </tr>
                     <c:forEach items="${ficha03Controller.getAllFichasByTrimestreAno(trimestre, ano)}" var="ficha">
                         <tr>
@@ -203,6 +215,16 @@
                                 ${ficha.getFuncionario().getNome()}
                                 <br>
                                 ${ficha.getFuncionario().getDependencia().getNome()}
+                            </td>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <c:choose>
+                                    <c:when test="${not empty ficha.justificativaGestor}">
+                                        <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                             style="cursor: pointer; width: 24px;"
+                                             onclick="verJustificativa('<c:out value="${ficha.justificativaGestor}"/>', ${ficha.id}, 'ficha03')">
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
                             </td>
                         </tr>
                     </c:forEach>
@@ -304,6 +326,7 @@
                         <th style='width: 350px;'>Rendimentos no período-base</th>
                         <th>Última atualização</th>
                         <th>Funcionário</th>
+                        <th>Justificativa</th>
                     </tr>
                     <c:forEach items="${ficha08Controller.getAllFichasByTrimestreAno(trimestre, ano)}" var="ficha">
                         <tr>
@@ -317,6 +340,16 @@
                                 ${ficha.getFuncionario().getNome()}
                                 <br>
                                 ${ficha.getFuncionario().getDependencia().getNome()}
+                            </td>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <c:choose>
+                                    <c:when test="${not empty ficha.justificativaGestor}">
+                                        <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                             style="cursor: pointer; width: 24px;"
+                                             onclick="verJustificativa('<c:out value="${ficha.justificativaGestor}"/>', ${ficha.id}, 'ficha08')">
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
                             </td>
                         </tr>
                     </c:forEach>
@@ -884,6 +917,7 @@
                         <th>Valor data base</th>
                         <th>Última atualização</th>
                         <th>Funcionário</th>
+                        <th>Justificativa</th>
                     </tr>
                     <c:forEach items="${ficha16Controller.getAllFichasByTrimestreAno(trimestre, ano)}" var="ficha">
                         <tr>
@@ -898,7 +932,16 @@
                                 <br>
                                 ${ficha.getFuncionario().getDependencia().getNome()}
                             </td>
-                        </tr>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <c:choose>
+                                    <c:when test="${not empty ficha.justificativaGestor}">
+                                        <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                             style="cursor: pointer; width: 24px;"
+                                             onclick="verJustificativa('<c:out value="${ficha.justificativaGestor}"/>', ${ficha.id}, 'ficha16')">
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
+                            </td>
                     </c:forEach>
                 </table>
             </div>
@@ -961,6 +1004,7 @@
                         <th>Juros recebidos</th>
                         <th>Última atualização</th>
                         <th>Funcionário</th>
+                        <th>Justificativa</th>
                     </tr>
                     <c:forEach items="${ficha18Controller.getAllFichasByTrimestreAno(trimestre, ano)}" var="ficha">
                         <tr>
@@ -976,11 +1020,42 @@
                                 <br>
                                 ${ficha.getFuncionario().getDependencia().getNome()}
                             </td>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <c:choose>
+                                    <c:when test="${not empty ficha.justificativaGestor}">
+                                        <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                             style="cursor: pointer; width: 24px;"
+                                             onclick="verJustificativa('<c:out value="${ficha.justificativaGestor}"/>', ${ficha.id}, 'ficha18')">
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
+                            </td>
                         </tr>
                     </c:forEach>
                 </table>
             </div>
         </div>
+
+        <div id="modalVisualizarJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">
+            <div style="background-color:#fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding:25px; border:1px solid #888; width:50%; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align:center; font-family: Arial, sans-serif;">
+
+                <h2 style="color: #003366; margin-bottom: 15px;">Justificativa do Gestor</h2>
+                <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+                <input type="hidden" id="modalFichaId">
+                <input type="hidden" id="modalFichaServlet">
+
+                <p id="conteudoJustificativaTexto" style="font-size: 16px; color: #333; margin-bottom: 30px; text-align: justify; line-height: 1.5; background: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee; max-height: 300px; overflow-y: auto;">
+                </p>
+
+                <div style="display: flex; justify-content: center; gap: 10px;">
+                    <button type="button" onclick="recusarJustificativa()" class="btn-vermelho">Recusar Justificativa</button>
+
+                    <button type="button" onclick="fecharModalJustificativa()" class="btn">Fechar</button>
+                </div>
+            </div>
+        </div>
+                
         <script>
             var ano = '${ano}';
             var trimestre = '${trimestre}';

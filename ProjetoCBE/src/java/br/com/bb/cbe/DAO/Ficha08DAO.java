@@ -1,38 +1,46 @@
 package br.com.bb.cbe.DAO;
 
-import br.com.bb.cbe.conexao.*;
-import br.com.bb.cbe.Bean.*;
-import br.com.bb.cbe.controllers.FuncionarioController;
-import br.com.bb.cbe.controllers.MoedaController;
-import br.com.bb.cbe.controllers.PaisController;
-import br.com.bb.cbe.controllers.StatusController;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import br.com.bb.cbe.controllers.StatusController;
+import br.com.bb.cbe.conexao.*;
+import br.com.bb.cbe.Bean.Ficha08;
+import br.com.bb.cbe.controllers.FuncionarioController;
+import br.com.bb.cbe.controllers.MoedaController;
+import br.com.bb.cbe.controllers.PaisController;
 import java.util.List;
 import java.util.Optional;
 
 public class Ficha08DAO {
 
-    Conexao conexao = new Conexao();
-
     public static void create(Ficha08 ficha) {
-        String sql = "INSERT INTO ficha08(saldo_database, rendimentos, data_criacao, trimestre, id_moeda, id_pais, chave, id_status) VALUES (?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO ficha08(id_moeda, id_pais, saldo_database, rendimentos, data_criacao, trimestre, chave, id_status, justificativa_gestor) VALUES (?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setDouble(1, ficha.getSaldoDatabase());
-            pst.setDouble(2, ficha.getRendimentos());
-            pst.setDate(3, new java.sql.Date(ficha.getDataCriacao().getTime()));
-            pst.setInt(4, ficha.getTrimestre());
-            pst.setInt(5, ficha.getMoeda().getId());
-            pst.setInt(6, ficha.getPais().getId());
-            pst.setString(7, ficha.getFuncionario().getChave());
+            pst.setInt(1, ficha.getMoeda().getId());
+            pst.setInt(2, ficha.getPais().getId());
+            pst.setDouble(3, ficha.getSaldoDatabase());
+            pst.setDouble(4, ficha.getRendimentos());
+            if (ficha.getDataCriacao() != null) {
+                pst.setDate(5, new java.sql.Date(ficha.getDataCriacao().getTime()));
+            } else {
+                pst.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
+            }
+            pst.setInt(6, ficha.getTrimestre());
+            if (ficha.getFuncionario() != null) {
+                pst.setString(7, ficha.getFuncionario().getChave());
+            } else {
+                pst.setString(7, null);
+            }
             pst.setInt(8, ficha.getStatus().getId());
+            pst.setString(9, ficha.getJustificativaGestor());
+            
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,19 +50,36 @@ public class Ficha08DAO {
     }
 
     public static void update(Ficha08 ficha) {
-        String sql = "UPDATE ficha08 SET id_pais = ?, id_moeda =?, saldo_database = ?, rendimentos = ?, chave = ?, data_criacao = ? WHERE id = ?";
+        String sql = "UPDATE ficha08 SET id_moeda=?, id_pais=?, saldo_database=?, rendimentos=?, data_criacao=?, chave=?, id_status=?, justificativa_gestor=? WHERE id=?";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setInt(1, ficha.getPais().getId());
-            pst.setInt(2, ficha.getMoeda().getId());
+            
+            pst.setInt(1, ficha.getMoeda().getId());
+            pst.setInt(2, ficha.getPais().getId());
             pst.setDouble(3, ficha.getSaldoDatabase());
             pst.setDouble(4, ficha.getRendimentos());
-            pst.setString(5, ficha.getFuncionario().getChave());
-            pst.setDate(6, new java.sql.Date(ficha.getDataCriacao().getTime()));
-            pst.setInt(7, ficha.getId());
+            
+            if (ficha.getDataCriacao() != null) {
+                pst.setDate(5, new java.sql.Date(ficha.getDataCriacao().getTime()));
+            } else {
+                pst.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
+            }
+            
+            if (ficha.getFuncionario() != null) {
+                pst.setString(6, ficha.getFuncionario().getChave());
+            } else {
+                pst.setString(6, null);
+            }
+            
+            pst.setInt(7, ficha.getStatus().getId());
+            
+            pst.setString(8, ficha.getJustificativaGestor());
+            
+            pst.setInt(9, ficha.getId()); // WHERE id
+            
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -79,15 +104,17 @@ public class Ficha08DAO {
         }
     }
 
+    // MÉTODOS DE CONSULTA
+
     public static List<Ficha08> getAllFichas() {
-        String query = "SELECT ficha08.*, pais.* FROM ficha08 LEFT JOIN pais ON ficha08.id_pais = pais.id_pais WHERE ficha08.id IS NOT NULL ORDER BY nome;";
-        List<Ficha08> listaFichas = new ArrayList<Ficha08>();
+        String query = "SELECT * FROM ficha08";
+        List<Ficha08> listaFichas = new ArrayList<>();
         Connection connection = null;
         Ficha08 ficha = null;
         ResultSet rs = null;
         PreparedStatement pst = null;
-        PaisController paisController = new PaisController();
         MoedaController moedaController = new MoedaController();
+        PaisController paisController = new PaisController();
         FuncionarioController funcionarioController = new FuncionarioController();
         StatusController statusController = new StatusController();
         try {
@@ -97,9 +124,89 @@ public class Ficha08DAO {
             while (rs.next()) {
                 ficha = new Ficha08();
                 ficha.setId(rs.getInt("id"));
-                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
+                ficha.setRendimentos(rs.getDouble("rendimentos"));
+                ficha.setDataCriacao(rs.getDate("data_criacao"));
+                ficha.setTrimestre(rs.getInt("trimestre"));
+                ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
+                ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                listaFichas.add(ficha);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
+        return listaFichas;
+    }
+
+    public static List<Ficha08> getAllFichasByTrimestreAno(int trimestre, int ano) {
+        switch (trimestre) {
+            case 1: trimestre = 2; break;
+            case 2: trimestre = 3; break;
+            case 3: trimestre = 4; break;
+            case 4: trimestre = 1; ano = ano + 1; break;
+            default: break;
+        }
+        String query = "SELECT * FROM ficha08 WHERE trimestre = " + trimestre + " AND YEAR(data_criacao) = " + ano;
+        List<Ficha08> listaFichas = new ArrayList<>();
+        Connection connection = null;
+        Ficha08 ficha = null;
+        ResultSet rs = null;
+        PreparedStatement pst = null;
+        MoedaController moedaController = new MoedaController();
+        PaisController paisController = new PaisController();
+        FuncionarioController funcionarioController = new FuncionarioController();
+        StatusController statusController = new StatusController();
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(query);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                ficha = new Ficha08();
+                ficha.setId(rs.getInt("id"));
+                ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
+                ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
+                ficha.setRendimentos(rs.getDouble("rendimentos"));
+                ficha.setDataCriacao(rs.getDate("data_criacao"));
+                ficha.setTrimestre(rs.getInt("trimestre"));
+                ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
+                ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
+                listaFichas.add(ficha);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
+        return listaFichas;
+    }
+
+    public static List<Ficha08> getAllFichasByAno(int ano) {
+        String query = "SELECT * FROM ficha08 WHERE YEAR(data_criacao) = " + ano;
+        List<Ficha08> listaFichas = new ArrayList<>();
+        Connection connection = null;
+        Ficha08 ficha = null;
+        ResultSet rs = null;
+        PreparedStatement pst = null;
+        MoedaController moedaController = new MoedaController();
+        PaisController paisController = new PaisController();
+        FuncionarioController funcionarioController = new FuncionarioController();
+        StatusController statusController = new StatusController();
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(query);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                ficha = new Ficha08();
+                ficha.setId(rs.getInt("id"));
+                ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
+                ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setRendimentos(rs.getDouble("rendimentos"));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
                 ficha.setTrimestre(rs.getInt("trimestre"));
@@ -115,28 +222,22 @@ public class Ficha08DAO {
         return listaFichas;
     }
 
-    // MANTER O SWITCH ORIGINAL AQUI
-    public static List<Ficha08> getAllFichasByTrimestreAno(int trimestre, int ano) {
+    public static List<Ficha08> getAllFichasByTrimestre(int trimestre) {
         switch (trimestre) {
             case 1: trimestre = 2; break;
             case 2: trimestre = 3; break;
             case 3: trimestre = 4; break;
-            case 4: trimestre = 1; ano = ano + 1; break;
+            case 4: trimestre = 1; break;
             default: break;
         }
-        String query = "SELECT ficha08.* FROM ficha08 "
-                + "LEFT JOIN pais ON ficha08.id_pais = pais.id_pais "
-                + "WHERE ficha08.id IS NOT NULL "
-                + "AND ficha08.trimestre = '" + trimestre + "' "
-                + "AND YEAR(ficha08.data_criacao) = '" + ano + "' "
-                + "ORDER BY pais.nome";
-        List<Ficha08> listaFichas = new ArrayList<Ficha08>();
+        String query = "SELECT * FROM ficha08 WHERE trimestre = " + trimestre;
+        List<Ficha08> listaFichas = new ArrayList<>();
         Connection connection = null;
         Ficha08 ficha = null;
         ResultSet rs = null;
         PreparedStatement pst = null;
-        PaisController paisController = new PaisController();
         MoedaController moedaController = new MoedaController();
+        PaisController paisController = new PaisController();
         FuncionarioController funcionarioController = new FuncionarioController();
         StatusController statusController = new StatusController();
         try {
@@ -146,9 +247,9 @@ public class Ficha08DAO {
             while (rs.next()) {
                 ficha = new Ficha08();
                 ficha.setId(rs.getInt("id"));
-                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setRendimentos(rs.getDouble("rendimentos"));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
                 ficha.setTrimestre(rs.getInt("trimestre"));
@@ -171,8 +272,8 @@ public class Ficha08DAO {
         ResultSet rs = null;
         PreparedStatement pst = null;
         MoedaController moedaController = new MoedaController();
-        FuncionarioController funcionarioController = new FuncionarioController();
         PaisController paisController = new PaisController();
+        FuncionarioController funcionarioController = new FuncionarioController();
         StatusController statusController = new StatusController();
         try {
             connection = Conexao.conectar();
@@ -181,14 +282,16 @@ public class Ficha08DAO {
             if (rs.next()) {
                 ficha = new Ficha08();
                 ficha.setId(rs.getInt("id"));
-                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
                 ficha.setRendimentos(rs.getDouble("rendimentos"));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                // Carrega a justificativa na edição
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {
@@ -266,95 +369,80 @@ public class Ficha08DAO {
         return trimestres;
     }
 
-    // Busca apenas por Ano (Mantendo JOIN para ordenação)
-    public static List<Ficha08> getAllFichasByAno(int ano) {
-        String query = "SELECT ficha08.* FROM ficha08 "
-                + "LEFT JOIN pais ON ficha08.id_pais = pais.id_pais "
-                + "WHERE ficha08.id IS NOT NULL "
-                + "AND YEAR(ficha08.data_criacao) = " + ano + " "
-                + "ORDER BY pais.nome";
-        List<Ficha08> listaFichas = new ArrayList<>();
+    // MÉTODO DE VALIDAÇÃO
+    public static boolean verificarNecessidadeJustificativa(double valorInformadoOriginal, int trimestreFicha, int anoFicha) {
         Connection connection = null;
-        Ficha08 ficha = null;
-        ResultSet rs = null;
         PreparedStatement pst = null;
-        PaisController paisController = new PaisController();
-        MoedaController moedaController = new MoedaController();
-        FuncionarioController funcionarioController = new FuncionarioController();
-        StatusController statusController = new StatusController();
+        ResultSet rs = null;
+        boolean precisaJustificar = false;
+
+        int triReferencia = trimestreFicha - 1;
+        int anoReferencia = anoFicha;
+        if (triReferencia == 0) {
+            triReferencia = 4;
+            anoReferencia = anoFicha - 1;
+        }
 
         try {
             connection = Conexao.conectar();
-            pst = connection.prepareStatement(query);
+
+            // A query soma automaticamente TODOS os COSIFs vinculados à ficha '8' na tabela consolidado
+            // Assim, se houver 2 ou mais COSIFs, eles são somados antes da comparação.
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT SUM(COALESCE(r.CONSOLIDADO, 0)) as total_consolidado ");
+            sql.append("FROM consolidado c ");
+            sql.append("LEFT JOIN planilha4010 r ");
+            sql.append("  ON r.CD_CT_PLN = c.cosif ");
+            sql.append("  AND r.CD_IOR = c.CD_IOR ");
+            sql.append("  AND r.CD_RBC = c.CD_RBC ");
+            sql.append("  AND QUARTER(r.DT_EVD) = ? ");
+            sql.append("  AND YEAR(r.DT_EVD) = ? ");
+            sql.append("WHERE c.ficha = '8' "); // Ficha 8
+
+            pst = connection.prepareStatement(sql.toString());
+            pst.setInt(1, triReferencia);
+            pst.setInt(2, anoReferencia);
+            
             rs = pst.executeQuery();
-            while (rs.next()) {
-                ficha = new Ficha08();
-                ficha.setId(rs.getInt("id"));
-                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
-                ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
-                ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
-                ficha.setRendimentos(rs.getDouble("rendimentos"));
-                ficha.setDataCriacao(rs.getDate("data_criacao"));
-                ficha.setTrimestre(rs.getInt("trimestre"));
-                ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
-                ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
-                listaFichas.add(ficha);
+
+            double valorPlanilhaBrl = 0.0;
+            if (rs.next()) {
+                valorPlanilhaBrl = rs.getDouble("total_consolidado");
             }
+
+            if (valorPlanilhaBrl != 0) {
+                double diferenca = Math.abs(valorInformadoOriginal - valorPlanilhaBrl);
+                double percentual = (diferenca / valorPlanilhaBrl) * 100;
+                if (percentual > 0.5) {
+                    precisaJustificar = true;
+                }
+            } else if (valorInformadoOriginal != 0) {
+                precisaJustificar = true;
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             Conexao.fecharConexao(connection, pst, rs);
         }
-        return listaFichas;
+
+        return precisaJustificar;
     }
-
-    // Busca apenas por Trimestre (COM O SWITCH E JOIN)
-    public static List<Ficha08> getAllFichasByTrimestre(int trimestre) {
-        switch (trimestre) {
-            case 1: trimestre = 2; break;
-            case 2: trimestre = 3; break;
-            case 3: trimestre = 4; break;
-            case 4: trimestre = 1; break;
-            default: break;
-        }
-
-        String query = "SELECT ficha08.* FROM ficha08 "
-                + "LEFT JOIN pais ON ficha08.id_pais = pais.id_pais "
-                + "WHERE ficha08.id IS NOT NULL "
-                + "AND ficha08.trimestre = " + trimestre + " "
-                + "ORDER BY pais.nome";
-        List<Ficha08> listaFichas = new ArrayList<>();
+    
+    public static void alterarStatus(int id, int novoStatus) {
+        String sql = "UPDATE ficha08 SET id_status = ? WHERE id = ?";
         Connection connection = null;
-        Ficha08 ficha = null;
-        ResultSet rs = null;
         PreparedStatement pst = null;
-        PaisController paisController = new PaisController();
-        MoedaController moedaController = new MoedaController();
-        FuncionarioController funcionarioController = new FuncionarioController();
-        StatusController statusController = new StatusController();
-
         try {
             connection = Conexao.conectar();
-            pst = connection.prepareStatement(query);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                ficha = new Ficha08();
-                ficha.setId(rs.getInt("id"));
-                ficha.setSaldoDatabase(rs.getDouble("saldo_database"));
-                ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
-                ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
-                ficha.setRendimentos(rs.getDouble("rendimentos"));
-                ficha.setDataCriacao(rs.getDate("data_criacao"));
-                ficha.setTrimestre(rs.getInt("trimestre"));
-                ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
-                ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
-                listaFichas.add(ficha);
-            }
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, novoStatus);
+            pst.setInt(2, id);
+            pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            Conexao.fecharConexao(connection, pst, rs);
+            Conexao.fecharConexao(connection, pst, null);
         }
-        return listaFichas;
     }
 }

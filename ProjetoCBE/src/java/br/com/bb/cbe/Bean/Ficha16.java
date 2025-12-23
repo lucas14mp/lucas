@@ -13,6 +13,7 @@ public class Ficha16 {
     private Moeda moeda;
     private Funcionario funcionario;
     private Status status;
+    private String justificativaGestor;
 
     public Ficha16() {
 
@@ -100,5 +101,13 @@ public class Ficha16 {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+    
+    public String getJustificativaGestor() {
+    return justificativaGestor;
+    }
+
+public void setJustificativaGestor(String justificativaGestor) {
+    this.justificativaGestor = justificativaGestor;
     }
 }

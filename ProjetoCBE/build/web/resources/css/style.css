@@ -445,6 +445,23 @@ a {
   float: none;            /* evita herdar algum float */
 }
 
+.btn-vermelho {
+    border: solid 1px #b5131d;
+    background-color: #b5131d;
+    color: #FFFFFF;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.btn-vermelho:hover {
+    background-color: #8a0e16; /* Tom mais escuro para o hover */
+    border-color: #8a0e16;     /* Borda acompanha a cor de fundo */
+    color: #ffffff;
+    cursor: pointer;
+}
+
 /* ============================ TESTE DA FICHA 11 =====================*/
 .container11 {
     padding: 20px;

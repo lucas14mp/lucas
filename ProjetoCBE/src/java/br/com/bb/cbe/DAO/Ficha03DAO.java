@@ -137,6 +137,7 @@ public class Ficha03DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -381,6 +382,23 @@ public class Ficha03DAO {
         }
 
         return precisaJustificar;
+    }
+    
+    public static void alterarStatus(int id, int novoStatus) {
+        String sql = "UPDATE ficha03 SET id_status = ? WHERE id = ?";
+        Connection connection = null;
+        PreparedStatement pst = null;
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, novoStatus);
+            pst.setInt(2, id);
+            pst.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, null);
+        }
     }
     
 }

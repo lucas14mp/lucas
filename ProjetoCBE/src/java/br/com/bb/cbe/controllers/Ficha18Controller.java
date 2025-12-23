@@ -4,9 +4,14 @@ import br.com.bb.cbe.Bean.Ficha18;
 import br.com.bb.cbe.Bean.Justificativa;
 import java.util.Date;
 import br.com.bb.cbe.DAO.Ficha18DAO;
+import br.com.bb.cbe.DAO.PtaxDAO;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +19,7 @@ import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import static java.util.Collections.list;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,43 +56,63 @@ public class Ficha18Controller extends HttpServlet {
         String tipoRequisicao = req.getParameter("tipo-requisicao");
         HttpSession session = req.getSession();
         String chaveFuncionario = (String) session.getAttribute("chave");
+        JsonObject jsonBodyObject = null;
+        List<Map<String, Object>> jsonBodyList = null;
+
+        final class Teste {
+
+            String valor;
+        }
+        Teste justificativaTeste = new Teste();
+
         try {
-            final class Teste {
-                String valor;
-            }
-            Teste justificativaTeste = new Teste();
-            List<Map<String, Object>> list = null;
-            if (tipoRequisicao == null) { //obter o tipoRequisicao aqui, caso seja passado pelo ajax
+            if (tipoRequisicao == null) {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
-                String json = sb.toString();
-                Gson gson = new Gson();
-                Type type = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
-                list = gson.fromJson(json, type);
-                System.out.println("LISTA: " + list);              
-                // Primeiro loop para encontrar "tipoRequisicao"
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("tipo-requisicao")) {
-                        tipoRequisicao = (String) map.get("tipo-requisicao");
-                            break;
-                    }
-                }
-                
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("justificativa")) {
-                        justificativaTeste.valor = (String) map.get("justificativa");
-                        System.out.println(justificativaTeste.valor);
-                            break;
+                String json = sb.toString().trim();
+
+                if (!json.isEmpty()) {
+                    if (json.startsWith("{")) {
+                        jsonBodyObject = JsonParser.parseString(json).getAsJsonObject();
+                        if (jsonBodyObject.has("tipo-requisicao")) {
+                            tipoRequisicao = jsonBodyObject.get("tipo-requisicao").getAsString();
+                        }
+                    } else if (json.startsWith("[")) {
+                        Gson gson = new Gson();
+                        Type type = new TypeToken<List<Map<String, Object>>>() {
+                        }.getType();
+                        jsonBodyList = gson.fromJson(json, type); // Preenche a lista aqui
+
+                        // Extrai o tipo de requisição da lista antiga
+                        if (jsonBodyList != null) {
+                            for (Map<String, Object> map : jsonBodyList) {
+                                if (map.containsKey("tipo-requisicao")) {
+                                    tipoRequisicao = (String) map.get("tipo-requisicao");
+                                    break;
+                                }
+                            }
+                            for (Map<String, Object> map : jsonBodyList) {
+                                if (map.containsKey("justificativa")) {
+                                    justificativaTeste.valor = (String) map.get("justificativa");
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            if (tipoRequisicao == null) {
+                tipoRequisicao = "";
+            }
+
             Ficha18 ficha = new Ficha18();
-            if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
+            // Lógica de Formulário Único (Post/Edit tradicional)
+            if ("post".equals(tipoRequisicao) || "edit".equals(tipoRequisicao)) {
                 int moedaId = Integer.parseInt(req.getParameter("moeda"));
                 int paisId = Integer.parseInt(req.getParameter("pais"));
                 ficha.setMoeda(moedaController.getMoedaById(moedaId));
@@ -97,10 +123,23 @@ public class Ficha18Controller extends HttpServlet {
                 ficha.setDataCriacao(new Date());
                 ficha.setTrimestre(DataUtils.validaTrimestre());
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
-                ficha.setStatus(statusController.getStatusById(1)); // 1 - não certificado / 2 - certificado
+                ficha.setStatus(statusController.getStatusById(1));
             }
 
             switch (tipoRequisicao) {
+                case "recusar":
+                    int idRecusar = Integer.parseInt(req.getParameter("id"));
+                    // Chama o DAO para mudar o status para 1
+                    Ficha18DAO.alterarStatus(idRecusar, 1);
+                    resp.setStatus(200);
+                    return;
+                case "validar-lote":
+                    validarLote(jsonBodyObject, resp);
+                    return;
+                case "salvar-lote":
+                    salvarLote(jsonBodyObject, chaveFuncionario);
+                    resp.setStatus(200);
+                    return;
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
                     Ficha18DAO.delete(id);
@@ -118,53 +157,48 @@ public class Ficha18Controller extends HttpServlet {
                     String[] idsValidadosArray = req.getParameterValues("idsValidados[]");
                     List<String> idsValidadosList = new ArrayList<>();
                     if (idsValidadosArray != null) {
-                        idsValidadosList = Arrays.asList(idsValidadosArray); // Convertendo array para ArrayList
+                        idsValidadosList = Arrays.asList(idsValidadosArray);
                     }
                     Ficha18DAO.validarFormularios(idsValidadosList, chaveFuncionario);
                     break;
                 case "validacaoBatch":
-                    System.out.println("TESTE");
-                    List<String> arrayIdsValidados = processarValidacao(list);
-                    for (String ids : arrayIdsValidados) {
-                        System.out.println("ID: " + ids);
+                    if (jsonBodyList != null) {
+                        List<String> arrayIdsValidados = processarValidacao(jsonBodyList);
+                        Ficha18DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
+
+                        if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
+                            Justificativa justificativa = processarJustificativa(jsonBodyList, chaveFuncionario);
+                            JustificativaController.createBatchJustController(justificativa);
+                        }
                     }
-                    Ficha18DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
-                    //Verificando se a justificativa não está nula e se é diferente de NTD (NÃO TEM DIFERENÇA)
-                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)){
-                        Justificativa justificativa = processarJustificativa(list, chaveFuncionario);
-                        JustificativaController.createBatchJustController(justificativa);
-                    }
-                    break;    
+                    break;
                 default:
-                    System.out.println("Tipo de requisição desconhecido");
+                    System.out.println("Tipo de requisição desconhecido: " + tipoRequisicao);
             }
-            if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
-//                  Redirecionando caso a requisição seja feita pelo ajax  
-                    resp.setStatus(HttpServletResponse.SC_CREATED);
-                    resp.setHeader("Content-Type", "application/json");
-                    resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha18.jsp\"}");
-                    return;
+
+            if ("createbatch".equals(tipoRequisicao) || "validacaoBatch".equals(tipoRequisicao)) {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.setHeader("Content-Type", "application/json");
+                resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha18.jsp\"}");
+                return;
             }
             resp.sendRedirect("views/ficha18.jsp");
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            req.setAttribute("mensagemErro", "O valor foi inserido em um formato inválido.\nPor favor, utilize o padrão: \"0.000.000,00\"");
+            req.setAttribute("mensagemErro", "Valor inválido.");
             req.setAttribute("linkPaginaAnterior", "/ProjetoCBE/forms/ficha18.jsp");
             RequestDispatcher dispatcher = req.getRequestDispatcher("/errors/customError.jsp");
             dispatcher.forward(req, resp);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public List<Ficha18> getAllFichas() {
         return Ficha18DAO.getAllFichas();
     }
     
-    // =========================================================================
-    // LÓGICA INVERSA (PARA FILTRO COMPOSTO E FILTRO DE TRIMESTRE)
-    // =========================================================================
 
     public List<Ficha18> getAllFichasByTrimestreAno(int trimestre, int ano) {
         int trimestreParaDAO = trimestre;
@@ -191,10 +225,6 @@ public class Ficha18Controller extends HttpServlet {
         }
         return Ficha18DAO.getAllFichasByTrimestre(trimestreParaDAO);
     }
-
-    // =========================================================================
-    // MÉTODOS AUXILIARES E FILTRO DE ANO
-    // =========================================================================
 
     public List<Ficha18> getAllFichasByAno(int ano) {
         return Ficha18DAO.getAllFichasByAno(ano);
@@ -280,5 +310,64 @@ public class Ficha18Controller extends HttpServlet {
               public List<Ficha18> getFichasPorPeriodo(int ano, int trimestre) {
         return Ficha18DAO.getAllFichasByTrimestreAno(trimestre, ano);
       }
+              
+              private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        JsonArray itens = json.getAsJsonArray("itens");
+        double somaTotalConvertidaBrl = 0.0;
+
+        int trimestreAtual = DataUtils.validaTrimestre();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int anoAtual = cal.get(java.util.Calendar.YEAR);
+        
+        int triRef = trimestreAtual - 1;
+        int anoRef = anoAtual;
+        if (triRef == 0) { triRef = 4; anoRef = anoAtual - 1; }
+
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            // Valida usando o VALOR DE MERCADO
+            double valorMercado = NumeroUtils.stringToDouble(item.get("valorMercado").getAsString());
+            int idMoeda = Integer.parseInt(item.get("id_moeda").getAsString());
+            
+            double taxa = PtaxDAO.getTaxaCompra(idMoeda, triRef, anoRef);
+            somaTotalConvertidaBrl += (valorMercado * taxa);
+        }
+
+        boolean precisa = Ficha18DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, trimestreAtual, anoAtual);
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
+    }
+
+    private void salvarLote(JsonObject json, String chaveFuncionario) {
+        JsonArray itens = json.getAsJsonArray("itens");
+        String justificativa = "";
+        if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
+            justificativa = json.get("justificativa").getAsString();
+        }
+
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            Ficha18 ficha = new Ficha18();
+            
+            // Campos específicos da Ficha 18
+            ficha.setPrazoDivida(item.get("prazo").getAsString());
+            ficha.setValorMercado(NumeroUtils.stringToDouble(item.get("valorMercado").getAsString()));
+            ficha.setJurosRecebidos(NumeroUtils.stringToDouble(item.get("juros").getAsString()));
+            
+            int moedaId = Integer.parseInt(item.get("id_moeda").getAsString());
+            int paisId = Integer.parseInt(item.get("id_pais").getAsString());
+            
+            ficha.setMoeda(moedaController.getMoedaById(moedaId));
+            ficha.setPais(paisController.getPaisById(paisId));
+            ficha.setTrimestre(DataUtils.validaTrimestre());
+            ficha.setDataCriacao(new java.util.Date());
+            ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
+            ficha.setStatus(statusController.getStatusById(1));
+            ficha.setJustificativaGestor(justificativa);
+
+            Ficha18DAO.create(ficha);
+        }
+    }
     
 }
