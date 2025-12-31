@@ -362,73 +362,165 @@ function getContabilByFicha(numFicha, info){
     return contabil;
 }
 
-$(document).ready(function() {
-    // Intercepta o clique no botão Salvar
-    $('#salvar').click(function(e) {
-        e.preventDefault(); // Impede o envio imediato
-        
-        var form = $(this).closest('form');
-        var valorInput = $('#valor').val();
-        var moedaId = $('#moeda').val();
-        var paisId = $('#pais').val();
+var listaItens = []; 
 
-        // Validação básica de preenchimento
-        if (!valorInput || !moedaId || !paisId) {
-            alert("Por favor, preencha todos os campos obrigatórios.");
+$(document).ready(function() {
+
+    // 1. Botão ADICIONAR ITEM À LISTA
+    $('#btnAdicionar').click(function() {
+        var paisId = $('#pais').val();
+        var paisNome = $('#pais option:selected').text();
+        var moedaId = $('#moeda').val();
+        var moedaNome = $('#moeda option:selected').text();
+        var valor = $('#valor').val();
+        var dividendos = $('#dividendos').val();
+
+        // Validação simples (Adicione mais se precisar)
+        if (!paisId || !moedaId || !valor) {
+            alert("Por favor, preencha País, Moeda e Valor.");
             return;
         }
 
-        // Chamada AJAX para o Controller realizar a validação segura
+        var item = {
+            id_pais: paisId,
+            nome_pais: paisNome,
+            id_moeda: moedaId,
+            nome_moeda: moedaNome,
+            valor: valor,
+            dividendos: dividendos
+        };
+
+        listaItens.push(item);
+        atualizarTabela();
+        limparCampos(); // Limpa os inputs para o próximo item
+    });
+
+    // 2. Botão SALVAR E ENVIAR FICHA (Processa o Lote)
+    $('#btnFinalizarLote').click(function(e) {
+        e.preventDefault();
+        
+        if (listaItens.length === 0) {
+            alert("Adicione pelo menos um item à lista.");
+            return;
+        }
+
+        // Envia para validação de soma no servidor
         $.ajax({
             type: "POST",
-            url: "../ficha01", // Mapeamento do Servlet
-            data: {
-                "tipo-requisicao": "validar-diferenca",
-                "valor": valorInput,
-                "moeda": moedaId
-            },
+            url: "../ficha01", 
+            data: JSON.stringify({
+                "tipo-requisicao": "validar-lote",
+                "itens": listaItens
+            }),
+            contentType: "application/json",
             dataType: "json",
             success: function(response) {
                 if (response.precisaJustificar) {
-                    // Exibe o Modal se a diferença for > 0.5%
                     $('#modalJustificativa').show();
                 } else {
-                    // Se não precisar justificar, envia o formulário normalmente
-                    enviarFormulario(form);
+                    salvarLoteDefinitivo(""); // Salva direto sem justificativa
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Erro na validação:", error);
-                // Em caso de erro técnico, decide se bloqueia ou permite (aqui permitindo com aviso)
-                alert("Erro ao validar dados no servidor. O formulário será enviado.");
-                enviarFormulario(form);
+                console.error("Erro validação:", error);
+                alert("Erro ao validar os dados no servidor.");
             }
         });
     });
 
-    // Ação do botão "Confirmar" no Modal
+    // 3. Controles do Modal
     $('#btnConfirmarJustificativa').click(function() {
-        var textoJustificativa = $('#textoJustificativa').val().trim();
-        
-        if (textoJustificativa === "") {
-            alert("É obrigatório informar uma justificativa para prosseguir.");
+        var texto = $('#textoJustificativa').val().trim();
+        if (texto === "") {
+            alert("A justificativa é obrigatória.");
             return;
         }
-
-        // Preenche o campo oculto no formulário principal e envia
-        $('#hiddenJustificativa').val(textoJustificativa);
         $('#modalJustificativa').hide();
-        
-        var form = $('.form'); // Seleciona o formulário pela classe
-        enviarFormulario(form);
+        salvarLoteDefinitivo(texto);
     });
 
-    // Ação do botão "Cancelar" no Modal
     $('#btnCancelarJustificativa').click(function() {
         $('#modalJustificativa').hide();
-        $('#textoJustificativa').val(''); // Limpa o campo
+        $('#textoJustificativa').val('');
     });
 });
+
+// Atualiza o HTML da tabela
+function atualizarTabela() {
+    var tbody = $('#tabelaItens tbody');
+    tbody.empty();
+    
+    listaItens.forEach(function(item, index) {
+        // Caminho da imagem de lixo (ajuste se sua pasta resources for diferente)
+        var iconeLixo = "<img src='../resources/imgs/lixovermelho.png' alt='Excluir' style='width:20px; height:20px; cursor:pointer;' title='Remover item'>";
+
+        var tr = `<tr>
+            <td>${item.nome_pais}</td>
+            <td>${item.nome_moeda}</td>
+            <td>${item.valor}</td>
+            <td>${item.dividendos}</td>
+            <td style="text-align:center;">
+                <span onclick="removerItem(${index})">${iconeLixo}</span>
+            </td>
+        </tr>`;
+        tbody.append(tr);
+    });
+
+    // Controla visibilidade do botão final
+    if (listaItens.length > 0) {
+        $('#areaBotaoFinal').show(); // Mostra a div que contém o botão
+    } else {
+        $('#areaBotaoFinal').hide();
+    }
+}
+
+// Remove item do array e redesenha
+function removerItem(index) {
+    listaItens.splice(index, 1);
+    atualizarTabela();
+}
+
+// Limpa apenas os inputs do formulário
+function limparCampos() {
+    $('#valor').val('');
+    $('#dividendos').val('');
+    // Opcional: Resetar selects para o padrão
+    // $('#pais').val('');
+    // $('#moeda').val('');
+}
+
+// Envio final para persistência
+function salvarLoteDefinitivo(justificativa) {
+    // Feedback visual simples
+    $('body').css('cursor', 'wait');
+    
+    $.ajax({
+        type: "POST",
+        url: "../ficha01",
+        data: JSON.stringify({
+            "tipo-requisicao": "salvar-lote",
+            "justificativa": justificativa,
+            "itens": listaItens
+        }),
+        contentType: "application/json",
+        success: function(response) {
+            $('body').css('cursor', 'default');
+            alert("Ficha enviada com sucesso!");
+            
+            // Redireciona para a tela de visualização ou limpa tudo
+            if(response.redirectUrl) {
+                window.location.href = "../" + response.redirectUrl; // Ajuste o caminho conforme o retorno
+            } else {
+                window.location.href = "../views/ficha01.jsp";
+            }
+        },
+        error: function(xhr) {
+            $('body').css('cursor', 'default');
+            console.error("Erro salvamento:", xhr);
+            alert("Erro ao salvar os dados. Tente novamente.");
+        }
+    });
+}
 
 function enviarFormulario(form) {
     // Remove o listener de click para evitar loop e submete

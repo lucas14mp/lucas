@@ -4,6 +4,7 @@ import java.util.Date;
 import br.com.bb.cbe.DAO.Ficha03DAO;
 import br.com.bb.cbe.Bean.Ficha03;
 import br.com.bb.cbe.Bean.Justificativa;
+import br.com.bb.cbe.DAO.PtaxDAO;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import com.google.gson.Gson;
@@ -26,6 +27,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import br.com.bb.cbe.conexao.Conexao;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.io.PrintWriter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 @WebServlet("/ficha03")
 public class Ficha03Controller extends HttpServlet {
@@ -42,55 +52,71 @@ public class Ficha03Controller extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF8");
+        
         String tipoRequisicao = req.getParameter("tipo-requisicao");
-                HttpSession session = req.getSession();
+        HttpSession session = req.getSession();
         String chaveFuncionario = (String) session.getAttribute("chave");
+
+        JsonObject jsonBodyObject = null;
+        List<Map<String, Object>> jsonBodyList = null;
+        final class Teste { String valor; }
+        Teste justificativaTeste = new Teste();
+
         try {
-            final class Teste {
-                String valor;
-            }
-            Teste justificativaTeste = new Teste();
-            List<Map<String, Object>> list = null;
-            if (tipoRequisicao == null) { 
+            if (tipoRequisicao == null) {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-                String json = sb.toString();
-                Gson gson = new Gson();
-                Type type = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
-                list = gson.fromJson(json, type);
-                // System.out.println("LISTA: " + list);              
-                
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("tipo-requisicao")) {
-                        tipoRequisicao = (String) map.get("tipo-requisicao");
-                            break;
-                    }
-                }
-                
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("justificativa")) {
-                        justificativaTeste.valor = (String) map.get("justificativa");
-                        // System.out.println(justificativaTeste.valor);
-                            break;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                String json = sb.toString().trim();
+
+                if (!json.isEmpty()) {
+                    if (json.startsWith("{")) {
+                        jsonBodyObject = JsonParser.parseString(json).getAsJsonObject();
+                        if (jsonBodyObject.has("tipo-requisicao")) {
+                            tipoRequisicao = jsonBodyObject.get("tipo-requisicao").getAsString();
+                        }
+                    } else if (json.startsWith("[")) {
+                        Gson gson = new Gson();
+                        Type type = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                        jsonBodyList = gson.fromJson(json, type);
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("tipo-requisicao")) {
+                                tipoRequisicao = (String) map.get("tipo-requisicao");
+                                break;
+                            }
+                        }
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("justificativa")) {
+                                justificativaTeste.valor = (String) map.get("justificativa");
+                                break;
+                            }
+                        }
                     }
                 }
             }
+
             Ficha03 ficha = new Ficha03();
-            if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
+            if ("post".equals(tipoRequisicao) || "edit".equals(tipoRequisicao)) {
                 int moedaId = Integer.parseInt(req.getParameter("moeda"));
                 ficha.setValorDatabase(NumeroUtils.stringToDouble(req.getParameter("valor")));
                 ficha.setMoeda(moedaController.getMoedaById(moedaId));
                 ficha.setTrimestre(DataUtils.validaTrimestre());
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
                 ficha.setStatus(statusContoller.getStatusById(1)); 
+                
+                String just = req.getParameter("justificativa_gestor");
+                if (just != null && !just.isEmpty()) {
+                    ficha.setJustificativaGestor(just);
+                } else {
+                    ficha.setJustificativaGestor("");
+                }
             }
+
+            if (tipoRequisicao == null) tipoRequisicao = "";
+
             switch (tipoRequisicao) {
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
@@ -114,24 +140,39 @@ public class Ficha03Controller extends HttpServlet {
                     Ficha03DAO.validarFormularios(idsValidadosList, chaveFuncionario);
                     break;
                 case "validacaoBatch":
-                    List<String> arrayIdsValidados = processarValidacao(list);
-                    Ficha03DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
-                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)){
-                        Justificativa justificativa = processarJustificativa(list, chaveFuncionario);
-                        JustificativaController.createBatchJustController(justificativa);
+                    if (jsonBodyList != null) {
+                        List<String> arrayIdsValidados = processarValidacao(jsonBodyList);
+                        Ficha03DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
+                        if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
+                            Justificativa justificativa = processarJustificativa(jsonBodyList, chaveFuncionario);
+                            JustificativaController.createBatchJustController(justificativa);
+                        }
                     }
                     break;
-                default:
-                    System.out.println("Tipo de requisição desconhecido");
-            }
-            
-            if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
-                    resp.setStatus(HttpServletResponse.SC_CREATED);
-                    resp.setHeader("Content-Type", "application/json");
-                    resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha03.jsp\"}");
+
+                // --- FLUXOS DE LOTE (FICHA 03) ---
+                case "validar-lote":
+                    validarLote(jsonBodyObject, resp);
+                    return; 
+
+                case "salvar-lote":
+                    salvarLote(jsonBodyObject, chaveFuncionario);
+                    resp.setStatus(200); 
                     return;
+
+                default:
+                    System.out.println("Tipo de requisição desconhecido: " + tipoRequisicao);
             }
+
+            if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.setHeader("Content-Type", "application/json");
+                resp.getWriter().write("{\"redirectUrl\": \"/ProjetoCBE/views/ficha03.jsp\"}");
+                return;
+            }
+
             resp.sendRedirect("views/ficha03.jsp");
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
             req.setAttribute("mensagemErro", "O valor foi inserido em um formato inválido.");
@@ -143,13 +184,73 @@ public class Ficha03Controller extends HttpServlet {
         }
     }
 
+    // --- MÉTODOS AUXILIARES ---
+
+    private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        JsonArray itens = json.getAsJsonArray("itens");
+        double somaTotalConvertidaBrl = 0.0;
+
+        int trimestreAtual = DataUtils.validaTrimestre();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int anoAtual = cal.get(java.util.Calendar.YEAR);
+        
+        int triRef = trimestreAtual - 1;
+        int anoRef = anoAtual;
+        if (triRef == 0) { triRef = 4; anoRef = anoAtual - 1; }
+
+        // Soma apenas o valor principal
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            String valorStr = item.get("valor").getAsString();
+            double valorOriginal = NumeroUtils.stringToDouble(valorStr);
+            int idMoeda = Integer.parseInt(item.get("id_moeda").getAsString());
+
+            double taxa = PtaxDAO.getTaxaCompra(idMoeda, triRef, anoRef);
+            somaTotalConvertidaBrl += (valorOriginal * taxa);
+        }
+
+        boolean precisa = Ficha03DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, trimestreAtual, anoAtual);
+
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
+    }
+
+    private void salvarLote(JsonObject json, String chaveFuncionario) {
+        JsonArray itens = json.getAsJsonArray("itens");
+        String justificativa = "";
+        if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
+            justificativa = json.get("justificativa").getAsString();
+        }
+
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            Ficha03 ficha = new Ficha03();
+            
+            // Apenas Valor e Moeda
+            String valorStr = item.get("valor").getAsString();
+            int moedaId = Integer.parseInt(item.get("id_moeda").getAsString());
+
+            ficha.setValorDatabase(NumeroUtils.stringToDouble(valorStr));
+            ficha.setMoeda(moedaController.getMoedaById(moedaId));
+            
+            ficha.setTrimestre(DataUtils.validaTrimestre());
+            ficha.setDataCriacao(new java.util.Date());
+            ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
+            ficha.setStatus(statusContoller.getStatusById(1));
+            
+            ficha.setJustificativaGestor(justificativa);
+
+            Ficha03DAO.create(ficha);
+        }
+    }
     public List<Ficha03> getAllFichas() {
         return Ficha03DAO.getAllFichas();
     }
+
     public List<Ficha03> getAllFichasByTrimestreAno(int trimestre, int ano) {
         int trimestreParaDAO = trimestre;
         int anoParaDAO = ano;
-
         switch (trimestre) {
             case 1: trimestreParaDAO = 4; anoParaDAO = ano - 1; break;
             case 2: trimestreParaDAO = 1; break;
@@ -191,8 +292,8 @@ public class Ficha03Controller extends HttpServlet {
         }
         return null;
     }
-    
-    public static List<String> processarValidacao(List<Map<String, Object>> list){
+
+    public static List<String> processarValidacao(List<Map<String, Object>> list) {
         final class Ids { List<String> ids; }
         Ids idsFinal = new Ids();
         for (Map<String, Object> map : list) {
@@ -205,8 +306,8 @@ public class Ficha03Controller extends HttpServlet {
         }
         return idsFinal.ids;
     }
-    
-    public static Justificativa processarJustificativa(List<Map<String, Object>> list, String chaveFuncionario){
+
+    public static Justificativa processarJustificativa(List<Map<String, Object>> list, String chaveFuncionario) {
         Justificativa tempJust = new Justificativa();
         FuncionarioController funcionario = new FuncionarioController();
         for (Map<String, Object> map : list) {
@@ -218,10 +319,10 @@ public class Ficha03Controller extends HttpServlet {
                             case "numeroFicha": tempJust.setNumeroFicha(value.toString()); break;
                             case "somatorio": tempJust.setSomatorio(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
                             case "contabil": tempJust.setContabil(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
-                            case "diferenca": tempJust.setDiferenca(NumeroUtils.formatAndConvertToFloat(value.toString())); break;    
+                            case "diferenca": tempJust.setDiferenca(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
                         }
                     } catch (ParseException ex) {
-                        Logger.getLogger(Ficha11MaiorController.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Ficha03Controller.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             });
@@ -230,15 +331,14 @@ public class Ficha03Controller extends HttpServlet {
         tempJust.setFuncionario(funcionario.getFuncionarioByChave(chaveFuncionario));
         return tempJust;
     }
-    
-     public String getAllFichasJson() {
-        Gson gson = new Gson(); 
+
+    public String getAllFichasJson() {
+        Gson gson = new Gson();
         List<Ficha03> fichas = Ficha03DAO.getAllFichas();
-        String ficha03Json = gson.toJson(fichas);
-        return ficha03Json;
-}
-     
-     public List<Ficha03> getFichasPorPeriodo(int ano, int trimestre) {
+        return gson.toJson(fichas);
+    }
+
+    public List<Ficha03> getFichasPorPeriodo(int ano, int trimestre) {
         return Ficha03DAO.getAllFichasByTrimestreAno(trimestre, ano);
-}
+    }
 }

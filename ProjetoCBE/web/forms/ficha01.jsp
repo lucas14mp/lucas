@@ -71,7 +71,34 @@
                         <div class="simbolo-moedas"> ${moeda.getSimbolo()}</div>
                         <input class="input-moedas" type="text" name="dividendos" required id="dividendos" placeholder="Digite um valor maior ou igual a 0" pattern="^(?!.*[.,]$)(?!^[.,])(?!.*[.,]{2})(0*(\.\d+)*|0*[1-9]\d*(\.\d+)*)(,\d+)?$">
                     </div>
-                    <input type="submit" value="Salvar" class="btn salvar" id="salvar">
+                    <div class="botoes" style="justify-content: flex-start; margin-top: 15px;">
+                        <button type="button" class="btn" id="btnAdicionar"> + Adicionar à Lista </button>
+                    </div>
+
+                    <hr style="margin: 30px 0; border-top: 1px solid #eee;">
+
+                    <h3 style="color: #003366; font-family: 'BancoDoBrasilTitulos-Regular', sans-serif;">Itens Adicionados</h3>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" id="tabelaItens" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f8f9fa; text-align: left;">
+                                    <th style="padding: 10px; border: 1px solid #ddd;">País</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">Moeda</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">Valor</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">Dividendos</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="botoes" id="areaBotaoFinal" style="display:none; margin-top: 30px; justify-content: center;">
+                        <button type="button" class="btn salvar" id="btnFinalizarLote">Salvar e Enviar Ficha</button>
+                    </div>
+
                     <input type="hidden" name="justificativa_gestor" id="hiddenJustificativa" value="">
 
                     <div id="modalJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">

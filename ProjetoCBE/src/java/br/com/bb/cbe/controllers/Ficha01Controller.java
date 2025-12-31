@@ -32,7 +32,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.io.PrintWriter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 @WebServlet("/ficha01")
 public class Ficha01Controller extends HttpServlet {
@@ -53,51 +56,62 @@ public class Ficha01Controller extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF8");
+        
         String tipoRequisicao = req.getParameter("tipo-requisicao");
         HttpSession session = req.getSession();
         String chaveFuncionario = (String) session.getAttribute("chave");
 
-        try {
-            // ... (seu código de leitura de JSON existente) ...
-            final class Teste {
+        // Variáveis auxiliares para processamento de JSON
+        JsonObject jsonBodyObject = null;
+        List<Map<String, Object>> jsonBodyList = null;
+        
+        // Classe auxiliar para capturar justificativa do fluxo antigo
+        final class Teste { String valor; }
+        Teste justificativaTeste = new Teste();
 
-                String valor;
-            }
-            Teste justificativaTeste = new Teste();
-            List<Map<String, Object>> list = null;
+        try {
+            // Lógica Unificada de Leitura do Body (Suporta Objeto Novo ou Lista Antiga)
             if (tipoRequisicao == null) {
-                // ... (lógica de ler JSON do body) ...
-                // (Mantenha seu código de leitura do Gson aqui)
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
-                String json = sb.toString();
-                Gson gson = new Gson();
-                Type type = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
-                list = gson.fromJson(json, type);
+                String json = sb.toString().trim();
 
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("tipo-requisicao")) {
-                        tipoRequisicao = (String) map.get("tipo-requisicao");
-                        break;
-                    }
-                }
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("justificativa")) {
-                        justificativaTeste.valor = (String) map.get("justificativa");
-                        break;
+                if (!json.isEmpty()) {
+                    // Verifica se é um Objeto JSON (Novo fluxo de Lote)
+                    if (json.startsWith("{")) {
+                        jsonBodyObject = JsonParser.parseString(json).getAsJsonObject();
+                        if (jsonBodyObject.has("tipo-requisicao")) {
+                            tipoRequisicao = jsonBodyObject.get("tipo-requisicao").getAsString();
+                        }
+                    } 
+                    // Verifica se é uma Lista JSON (Fluxo antigo de validação)
+                    else if (json.startsWith("[")) {
+                        Gson gson = new Gson();
+                        Type type = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                        jsonBodyList = gson.fromJson(json, type);
+
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("tipo-requisicao")) {
+                                tipoRequisicao = (String) map.get("tipo-requisicao");
+                                break;
+                            }
+                        }
+                        for (Map<String, Object> map : jsonBodyList) {
+                            if (map.containsKey("justificativa")) {
+                                justificativaTeste.valor = (String) map.get("justificativa");
+                                break;
+                            }
+                        }
                     }
                 }
             }
 
-            // Objeto ficha auxiliar
+            // Objeto ficha auxiliar para operações unitárias (post/edit legados)
             Ficha01 ficha = new Ficha01();
-
-            // Apenas preenche o objeto se for post ou edit para evitar erros de nulo nas validações
             if ("post".equals(tipoRequisicao) || "edit".equals(tipoRequisicao)) {
                 int moedaId = Integer.parseInt(req.getParameter("moeda"));
                 int paisId = Integer.parseInt(req.getParameter("pais"));
@@ -109,17 +123,19 @@ public class Ficha01Controller extends HttpServlet {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
                 ficha.setStatus(statusController.getStatusById(1));
 
-                // CAPTURA A JUSTIFICATIVA DO FORMULÁRIO AQUI
                 String just = req.getParameter("justificativa_gestor");
                 if (just != null && !just.isEmpty()) {
                     ficha.setJustificativaGestor(just);
                 } else {
-                    ficha.setJustificativaGestor(""); // Garante que não vá nulo
+                    ficha.setJustificativaGestor("");
                 }
             }
 
-            // ================= AQUI ENTRA O SWITCH CORRIGIDO =================
+            // Switch Principal
+            if (tipoRequisicao == null) tipoRequisicao = ""; // Evita NullPointer no switch
+
             switch (tipoRequisicao) {
+                // --- FLUXOS ANTIGOS/PADRÃO ---
                 case "delete":
                     int id = Integer.parseInt(req.getParameter("id"));
                     Ficha01DAO.delete(id);
@@ -142,65 +158,29 @@ public class Ficha01Controller extends HttpServlet {
                     Ficha01DAO.validarFormularios(idsValidadosList, chaveFuncionario);
                     break;
                 case "validacaoBatch":
-                    List<String> arrayIdsValidados = processarValidacao(list);
-                    Ficha01DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
-                    if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
-                        Justificativa justificativa = processarJustificativa(list, chaveFuncionario);
-                        JustificativaController.createBatchJustController(justificativa);
+                    if (jsonBodyList != null) {
+                        List<String> arrayIdsValidados = processarValidacao(jsonBodyList);
+                        Ficha01DAO.validarFormularios(arrayIdsValidados, chaveFuncionario);
+                        if (justificativaTeste.valor != null && !"NTD".equals(justificativaTeste.valor)) {
+                            Justificativa justificativa = processarJustificativa(jsonBodyList, chaveFuncionario);
+                            JustificativaController.createBatchJustController(justificativa);
+                        }
                     }
                     break;
 
-                // Em Ficha01Controller.java
+                //  VALIDAÇÃO DE LOTE (SOMA + CONVERSÃO)
+                case "validar-lote":
+                    validarLote(jsonBodyObject, resp);
+                    return; // Retorna aqui pois é a resposta JSON
 
-            case "validar-diferenca":
-                try {
-                    // 1. Recebe valor e moeda do formulário
-                    String valorStr = req.getParameter("valor");
-                    double valorInformado = NumeroUtils.stringToDouble(valorStr);
-                    int idMoeda = Integer.parseInt(req.getParameter("moeda"));
-
-                    // 2. Obtém Trimestre e Ano da Ficha (Vigente)
-                    int trimestreAtual = DataUtils.validaTrimestre();
-                    java.util.Calendar cal = java.util.Calendar.getInstance();
-                    int anoAtual = cal.get(java.util.Calendar.YEAR);
-
-                    // 3. Calcula o Período de REFERÊNCIA para a PTAX
-                    // (A mesma lógica de "voltar um trimestre" que usamos no DAO)
-                    int triReferencia = trimestreAtual - 1;
-                    int anoReferencia = anoAtual;
-                    if (triReferencia == 0) {
-                        triReferencia = 4;
-                        anoReferencia = anoAtual - 1;
-                    }
-
-                    double taxaPtax = PtaxDAO.getTaxaCompra(idMoeda, triReferencia, anoReferencia);
-                    
-                    double valorConvertidoBrl = valorInformado * taxaPtax;
-
-                    // Debug no Console
-                    System.out.println(">>> CONVERSAO CONTROLLER <<<");
-                    System.out.println("Moeda ID: " + idMoeda + " | Taxa PTAX (Tri " + triReferencia + "): " + taxaPtax);
-                    System.out.println("Valor Original: " + valorInformado + " -> Convertido BRL: " + valorConvertidoBrl);
-
-                    // 5. Chama o DAO passando o valor JÁ CONVERTIDO em Reais
-                    boolean precisa = Ficha01DAO.verificarNecessidadeJustificativa(valorConvertidoBrl, trimestreAtual, anoAtual);
-
-                    // 6. Retorno
-                    resp.setContentType("application/json");
-                    resp.setCharacterEncoding("UTF-8");
-                    PrintWriter out = resp.getWriter();
-                    out.print("{\"precisaJustificar\": " + precisa + "}");
-                    out.flush();
-                    return; 
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    // Retorna JSON simples de erro
-                    resp.setContentType("application/json");
-                    resp.getWriter().write("{\"precisaJustificar\": false}"); 
-                }
-                break;
+                // SALVAR O LOTE NO BANCO
+                case "salvar-lote":
+                    salvarLote(jsonBodyObject, chaveFuncionario);
+                    resp.setStatus(200);
+                    return;
             }
+
+            // Redirecionamentos padrão
             if (tipoRequisicao.equals("createbatch") || tipoRequisicao.equals("validacaoBatch")) {
                 resp.setStatus(HttpServletResponse.SC_CREATED);
                 resp.setHeader("Content-Type", "application/json");
@@ -221,16 +201,103 @@ public class Ficha01Controller extends HttpServlet {
         }
     }
 
+    private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        JsonArray itens = json.getAsJsonArray("itens");
+        double somaTotalConvertidaBrl = 0.0;
+
+        // 1. Obtém dados de Período
+        int trimestreAtual = DataUtils.validaTrimestre();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int anoAtual = cal.get(java.util.Calendar.YEAR);
+
+        // 2. Calcula Referência (Trimestre Anterior)
+        int triRef = trimestreAtual - 1;
+        int anoRef = anoAtual;
+        if (triRef == 0) {
+            triRef = 4;
+            anoRef = anoAtual - 1;
+        }
+
+        System.out.println(">>> VALIDANDO LOTE (" + itens.size() + " itens) <<<");
+        
+        // 3. Itera sobre os itens para converter e somar
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            
+            // Pega o valor original (ex: 1000.00 USD)
+            String valorStr = item.get("valor").getAsString();
+            double valorOriginal = NumeroUtils.stringToDouble(valorStr);
+            int idMoeda = Integer.parseInt(item.get("id_moeda").getAsString());
+
+            // Busca a Taxa PTAX do período de referência
+            double taxa = PtaxDAO.getTaxaCompra(idMoeda, triRef, anoRef);
+            
+            // Converte e Soma
+            double valorConvertido = valorOriginal * taxa;
+            somaTotalConvertidaBrl += valorConvertido;
+            
+            System.out.println("   Item: " + valorOriginal + " (Moeda " + idMoeda + ") * Taxa " + taxa + " = " + valorConvertido);
+        }
+
+        System.out.println(">>> TOTAL LOTE (BRL): " + somaTotalConvertidaBrl);
+
+        // 4. Valida o Montante Total contra o Banco
+        boolean precisa = Ficha01DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, trimestreAtual, anoAtual);
+
+        // 5. Retorna JSON
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
+    }
+
+    private void salvarLote(JsonObject json, String chaveFuncionario) {
+        JsonArray itens = json.getAsJsonArray("itens");
+        String justificativa = "";
+        if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
+            justificativa = json.get("justificativa").getAsString();
+        }
+
+        System.out.println(">>> SALVANDO LOTE NO BANCO. Justificativa: " + justificativa);
+
+        // Loop para salvar cada item individualmente no banco
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            Ficha01 ficha = new Ficha01();
+
+            // Dados do Item
+            String valorStr = item.get("valor").getAsString();
+            String divStr = item.get("dividendos").getAsString();
+            int moedaId = Integer.parseInt(item.get("id_moeda").getAsString());
+            int paisId = Integer.parseInt(item.get("id_pais").getAsString());
+
+            ficha.setValorDatabase(NumeroUtils.stringToDouble(valorStr));
+            ficha.setDividendos(NumeroUtils.stringToDouble(divStr));
+            
+            // Objetos Relacionados
+            ficha.setMoeda(moedaController.getMoedaById(moedaId));
+            ficha.setPais(paisController.getPaisById(paisId));
+            
+            // Dados Padrão da Ficha
+            ficha.setTrimestre(DataUtils.validaTrimestre());
+            ficha.setDataCriacao(new java.util.Date());
+            ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
+            ficha.setStatus(statusController.getStatusById(1)); // Status "Pendente/Salvo"
+            
+            // A justificativa é aplicada a todos os itens do lote (pois o lote todo gerou a diferença)
+            ficha.setJustificativaGestor(justificativa);
+
+            // Persiste
+            Ficha01DAO.create(ficha);
+        }
+    }
+    
     public List<Ficha01> getAllFichas() {
         return Ficha01DAO.getAllFichas();
     }
-    
 
     public List<Ficha01> getAllFichasByTrimestreAno(int trimestre, int ano) {
         int trimestreParaDAO = trimestre;
         int anoParaDAO = ano;
-
-        // "Engana" o DAO enviando o trimestre anterior
         switch (trimestre) {
             case 1: trimestreParaDAO = 4; anoParaDAO = ano - 1; break;
             case 2: trimestreParaDAO = 1; break;
@@ -238,13 +305,11 @@ public class Ficha01Controller extends HttpServlet {
             case 4: trimestreParaDAO = 3; break;
             default: trimestreParaDAO = trimestre; break;
         }
-
         return Ficha01DAO.getAllFichasByTrimestreAno(trimestreParaDAO, anoParaDAO);
     }
-    
+
     public List<Ficha01> getAllFichasByTrimestre(int trimestre) {
         int trimestreParaDAO = trimestre;
-        
         switch (trimestre) {
             case 1: trimestreParaDAO = 4; break;
             case 2: trimestreParaDAO = 1; break;
@@ -252,10 +317,8 @@ public class Ficha01Controller extends HttpServlet {
             case 4: trimestreParaDAO = 3; break;
             default: trimestreParaDAO = trimestre; break;
         }
-
         return Ficha01DAO.getAllFichasByTrimestre(trimestreParaDAO);
     }
-
 
     public List<Ficha01> getAllFichasByAno(int ano) {
         return Ficha01DAO.getAllFichasByAno(ano);
@@ -276,8 +339,8 @@ public class Ficha01Controller extends HttpServlet {
         }
         return null;
     }
-    
-    public static List<String> processarValidacao(List<Map<String, Object>> list){
+
+    public static List<String> processarValidacao(List<Map<String, Object>> list) {
         final class Ids { List<String> ids; }
         Ids idsFinal = new Ids();
         for (Map<String, Object> map : list) {
@@ -290,8 +353,8 @@ public class Ficha01Controller extends HttpServlet {
         }
         return idsFinal.ids;
     }
-    
-    public static Justificativa processarJustificativa(List<Map<String, Object>> list, String chaveFuncionario){
+
+    public static Justificativa processarJustificativa(List<Map<String, Object>> list, String chaveFuncionario) {
         Justificativa tempJust = new Justificativa();
         FuncionarioController funcionario = new FuncionarioController();
         for (Map<String, Object> map : list) {
@@ -303,7 +366,7 @@ public class Ficha01Controller extends HttpServlet {
                             case "numeroFicha": tempJust.setNumeroFicha(value.toString()); break;
                             case "somatorio": tempJust.setSomatorio(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
                             case "contabil": tempJust.setContabil(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
-                            case "diferenca": tempJust.setDiferenca(NumeroUtils.formatAndConvertToFloat(value.toString())); break;    
+                            case "diferenca": tempJust.setDiferenca(NumeroUtils.formatAndConvertToFloat(value.toString())); break;
                         }
                     } catch (ParseException ex) {
                         Logger.getLogger(Ficha01Controller.class.getName()).log(Level.SEVERE, null, ex);
@@ -315,15 +378,14 @@ public class Ficha01Controller extends HttpServlet {
         tempJust.setFuncionario(funcionario.getFuncionarioByChave(chaveFuncionario));
         return tempJust;
     }
- 
+
     public String getAllFichasJson() {
-        Gson gson = new Gson(); 
+        Gson gson = new Gson();
         List<Ficha01> fichas = Ficha01DAO.getAllFichas();
         return gson.toJson(fichas);
     }
-    
+
     public List<Ficha01> getFichasPorPeriodo(int ano, int trimestre) {
-    return Ficha01DAO.getAllFichasByTrimestreAno(trimestre, ano);
-}
-  
+        return Ficha01DAO.getAllFichasByTrimestreAno(trimestre, ano);
+    }
 }

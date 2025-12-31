@@ -9,7 +9,7 @@ public class Conexao {
 
     // Configurações do banco de dados local
     // Adicionei os parâmetros de timezone e encoding para evitar erros comuns no MySQL local
-    private static final String URL = "jdbc:mysql://localhost:3306/banco_cbe_teste?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=disabled";
+    private static final String URL = "jdbc:mysql://localhost:3306/banco_cbe_teste?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=disabled&allowPublicKeyRetrieval=true";
     private static final String USUARIO = "root";
     private static final String SENHA = "Lucas8mp%";
 

@@ -16,7 +16,7 @@ import java.util.Optional;
 public class Ficha03DAO {
 
     public static void create(Ficha03 ficha) {
-        String sql = "INSERT INTO ficha03(valor_database, id_moeda, data_criacao, trimestre, chave, id_status) VALUES (?,?,?,?,?,?)";
+        String sql = "INSERT INTO ficha03(valor_database, id_moeda, data_criacao, trimestre, chave, id_status, justificativa_gestor) VALUES (?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -28,6 +28,7 @@ public class Ficha03DAO {
             pst.setInt(4, ficha.getTrimestre());
             pst.setString(5, ficha.getFuncionario().getChave());
             pst.setInt(6, ficha.getStatus().getId());
+            pst.setString(7, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -322,4 +323,64 @@ public class Ficha03DAO {
         }
         return listaFichas;
     }
+    
+    public static boolean verificarNecessidadeJustificativa(double valorInformadoOriginal, int trimestreFicha, int anoFicha) {
+        Connection connection = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        boolean precisaJustificar = false;
+
+        // Lógica do Período (Vigente -> Anterior)
+        int triReferencia = trimestreFicha - 1;
+        int anoReferencia = anoFicha;
+        if (triReferencia == 0) {
+            triReferencia = 4;
+            anoReferencia = anoFicha - 1;
+        }
+
+        try {
+            connection = Conexao.conectar();
+
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT SUM(COALESCE(r.CONSOLIDADO, 0)) as total_consolidado ");
+            sql.append("FROM consolidado c ");
+            sql.append("LEFT JOIN planilha4010 r ");
+            sql.append("  ON r.CD_CT_PLN = c.cosif ");
+            sql.append("  AND r.CD_IOR = c.CD_IOR ");
+            sql.append("  AND r.CD_RBC = c.CD_RBC ");
+            sql.append("  AND QUARTER(r.DT_EVD) = ? ");
+            sql.append("  AND YEAR(r.DT_EVD) = ? ");
+            sql.append("WHERE c.ficha = '3' "); // <--- MUDANÇA IMPORTANTE: Ficha 3
+
+            pst = connection.prepareStatement(sql.toString());
+            pst.setInt(1, triReferencia);
+            pst.setInt(2, anoReferencia);
+
+            rs = pst.executeQuery();
+
+            double valorPlanilhaBrl = 0.0;
+            if (rs.next()) {
+                valorPlanilhaBrl = rs.getDouble("total_consolidado");
+            }
+
+            // Validação ( > 0.5% )
+            if (valorPlanilhaBrl != 0) {
+                double diferenca = Math.abs(valorInformadoOriginal - valorPlanilhaBrl);
+                double percentual = (diferenca / valorPlanilhaBrl) * 100;
+                if (percentual > 0.5) {
+                    precisaJustificar = true;
+                }
+            } else if (valorInformadoOriginal != 0) {
+                precisaJustificar = true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
+        }
+
+        return precisaJustificar;
+    }
+    
 }
