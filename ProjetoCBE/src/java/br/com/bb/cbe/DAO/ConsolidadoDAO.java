@@ -64,7 +64,6 @@ public class ConsolidadoDAO {
 
     /**
      * Busca os dados consolidados filtrando por Ficha, Mês e Ano.
-     * CORREÇÃO:
      * 1. Usa '=' no COSIF (sem LIKE) para evitar pegar finais 80/28.
      * 2. Filtra por IOR e RBC para pegar a linha exata e não somar duplicado.
      * 3. Filtra por Mês e Ano da tabela 4010 (DT_EVD).
@@ -85,11 +84,11 @@ public class ConsolidadoDAO {
                 "  SUM(COALESCE(r.CONSOLIDADO, 0)) AS total_consolidado\n" +
                 "FROM consolidado c\n" +
                 "LEFT JOIN planilha4010 r \n" +
-                "  ON r.CD_CT_PLN = c.cosif \n" + // CORREÇÃO 1: Igualdade estrita
-                "  AND r.CD_IOR = c.CD_IOR\n" +   // CORREÇÃO 2: Filtra IOR igual
-                "  AND r.CD_RBC = c.CD_RBC\n" +   // CORREÇÃO 3: Filtra RBC igual
-                "  AND MONTH(r.DT_EVD) = ? \n" +  // CORREÇÃO 4: Filtra o Mês exato
-                "  AND YEAR(r.DT_EVD) = ? \n" +   // CORREÇÃO 5: Filtra o Ano exato
+                "  ON r.CD_CT_PLN = c.cosif \n" + // Igualdade estrita
+                "  AND r.CD_IOR = c.CD_IOR\n" +   // Filtra IOR igual
+                "  AND r.CD_RBC = c.CD_RBC\n" +   // Filtra RBC igual
+                "  AND MONTH(r.DT_EVD) = ? \n" +  // Filtra o Mês exato
+                "  AND YEAR(r.DT_EVD) = ? \n" +   // Filtra o Ano exato
                 "WHERE c.ficha = ?\n" +
                 "GROUP BY c.cosif, c.nome_cosif, c.ficha, c.nome_ficha;";
 
@@ -239,5 +238,57 @@ public class ConsolidadoDAO {
             Conexao.fecharConexao(conn, pst, rs);
         }
         return periodos;
+    }
+    
+    public static void salvarValorBacen(int trimestre, int ano, String fichaNome, double valor) {
+        // Tabela criada: valor_bacen
+        String sql = "INSERT INTO valor_bacen (trimestre, ano, ficha_nome, valor) VALUES (?, ?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE valor = ?";
+        
+        Connection con = null;
+        PreparedStatement pst = null;
+        
+        try {
+            con = Conexao.conectar();
+            pst = con.prepareStatement(sql);
+            
+            pst.setInt(1, trimestre);
+            pst.setInt(2, ano);
+            pst.setString(3, fichaNome);
+            pst.setDouble(4, valor);
+            pst.setDouble(5, valor); // Update
+            
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(con, pst, null);
+        }
+    }
+
+    public static Map<String, Double> getValoresBacen(int trimestre, int ano) {
+        Map<String, Double> mapa = new HashMap<>();
+        String sql = "SELECT ficha_nome, valor FROM valor_bacen WHERE trimestre = ? AND ano = ?";
+        
+        Connection con = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        try {
+            con = Conexao.conectar();
+            pst = con.prepareStatement(sql);
+            pst.setInt(1, trimestre);
+            pst.setInt(2, ano);
+            
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                mapa.put(rs.getString("ficha_nome"), rs.getDouble("valor"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(con, pst, rs);
+        }
+        return mapa;
     }
 }

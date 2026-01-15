@@ -313,3 +313,168 @@ function formatCosifNoDv(raw) {
   });
 
 })();
+
+ /* =========================== B A C E N =================== */
+ 
+document.addEventListener('DOMContentLoaded', function() {
+
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatarPorcentagem(valor) {
+        return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+    }
+
+    // Transforma texto BR (1.000,50) em Float JS (1000.50) para cálculos
+    function parseValor(valorStr) {
+        if (!valorStr) return 0.0;
+        if (typeof valorStr === 'number') return valorStr;
+        
+        // Mantém apenas números e vírgula
+        // Remove os pontos de milhar para não atrapalhar
+        let limpo = valorStr.toString().replace(/\./g, ''); 
+        
+        // Troca a vírgula decimal por ponto para o JS entender
+        limpo = limpo.replace(',', '.');
+        
+        return parseFloat(limpo) || 0.0;
+    }
+
+    function atualizarTotais() {
+        let totalFicha = 0.0;
+        let totalBacen = 0.0;
+        let totalDiff = 0.0;
+
+        // Soma coluna Ficha
+        document.querySelectorAll('.val-ficha').forEach(td => {
+            totalFicha += parseFloat(td.getAttribute('data-valor')) || 0;
+        });
+
+        // Soma coluna Bacen (Input)
+        document.querySelectorAll('.input-bacen').forEach(input => {
+            totalBacen += parseValor(input.value);
+        });
+
+        totalDiff = totalFicha - totalBacen;
+        
+        // Calcula Porcentagem Total
+        let totalPorcent = 0.0;
+        if (totalFicha !== 0) {
+            totalPorcent = (totalDiff / totalFicha) * 100;
+        }
+
+        // Seleciona elementos do rodapé
+        const elTotalFicha = document.getElementById('total-ficha');
+        const elTotalBacen = document.getElementById('total-bacen');
+        const elTotalDiff = document.getElementById('total-diferenca');
+        const elTotalPorc = document.getElementById('total-porcentagem');
+
+        // Atualiza Textos
+        if(elTotalFicha) elTotalFicha.innerText = formatarMoeda(totalFicha);
+        if(elTotalBacen) elTotalBacen.innerText = formatarMoeda(totalBacen);
+        if(elTotalDiff) elTotalDiff.innerText = formatarMoeda(totalDiff);
+        
+        // Lógica da Porcentagem e Cor
+        if(elTotalPorc) {
+            elTotalPorc.innerText = formatarPorcentagem(totalPorcent);
+            if (Math.abs(totalPorcent) > 0.5) {
+                elTotalPorc.style.color = "yellow"; // Amarelo destaque no fundo azul
+                // Se o fundo fosse claro, amarelo seria ruim de ler, mas no fundo azul #0038a8 fica ótimo.
+            } else {
+                elTotalPorc.style.color = "#ffffff"; // Branco padrão
+            }
+        }
+    }
+
+    window.calcularLinha = function(input) {
+        let row = input.closest('tr');
+        
+        let valFicha = parseFloat(row.querySelector('.val-ficha').getAttribute('data-valor'));
+        let valBacen = parseValor(input.value);
+        
+        let diferenca = valFicha - valBacen;
+        let porcentagem = (valFicha !== 0) ? (diferenca / valFicha) * 100 : 0.0;
+
+        // Atualiza a tela
+        row.querySelector('.val-diferenca').innerText = formatarMoeda(diferenca);
+        
+        let cellPorc = row.querySelector('.val-porcentagem');
+        cellPorc.innerText = formatarPorcentagem(porcentagem);
+
+        // Regra de cor > 0.5%
+        if (Math.abs(porcentagem) > 0.5) {
+            cellPorc.style.color = "red";
+            cellPorc.style.fontWeight = "bold";
+        } else {
+            cellPorc.style.color = "inherit";
+        }
+
+        atualizarTotais();
+    };
+
+    // --- 3. SALVAR (CORRIGIDO PARA NÃO QUEBRAR O NÚMERO) ---
+    window.salvarValoresBacen = function() {
+        let listaSalvar = [];
+        
+        document.querySelectorAll('.input-bacen').forEach(input => {
+            // Pega o valor digitado (Ex: "46.466.935,70")
+            // A função parseValor já limpa os pontos e arruma a virgula para ponto (Ex: 46466935.70)
+            let valorDouble = parseValor(input.value); 
+            
+            // Convertemos para String formato US simples para enviar ao Java sem erro
+            // Ex: "46466935.70"
+            let valorParaEnviar = valorDouble.toFixed(2); 
+
+            let item = {
+                trimestre: trimestreAtual,
+                ano: anoAtual,
+                ficha: input.getAttribute('data-ficha-nome'),
+                valor: valorParaEnviar // Envia limpo, sem pontos de milhar
+            };
+            listaSalvar.push(item);
+        });
+
+        // Envia
+        fetch(contextPath + '/ConsolidadoController', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(listaSalvar)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Valores salvos com sucesso!');
+                // Opcional: Recarregar para garantir formato vindo do banco
+                // location.reload(); 
+            } else {
+                alert('Erro ao salvar.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro de conexão.');
+        });
+    };
+
+    // --- 4. ESTILO ---
+    function estilizarTabelaConsolidado() {
+        const data = new Date();
+        const mesAtual = data.getMonth(); 
+        const tabelas = document.querySelectorAll('.table-lista-fichas');
+        if (tabelas.length === 0) return;
+        if (mesAtual === 9) { 
+            tabelas.forEach(tabela => {
+                tabela.classList.add('table-outubro-consolidado');
+                const cabecalho = tabela.querySelectorAll('th');
+                cabecalho.forEach(th => { th.style.backgroundColor = '#fc8b9f'; });
+            });
+        }
+    }
+
+    estilizarTabelaConsolidado();
+    
+    // Inicializa cálculos
+    document.querySelectorAll('.input-bacen').forEach(input => {
+        calcularLinha(input);
+    });
+});

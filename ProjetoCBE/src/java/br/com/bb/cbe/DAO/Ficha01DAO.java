@@ -189,6 +189,7 @@ public class Ficha01DAO {
                 ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {

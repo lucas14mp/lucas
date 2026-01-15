@@ -4,6 +4,7 @@
     Author     : T1092489
 --%>
 
+<%@page import="br.com.bb.cbe.DAO.ConsolidadoDAO"%>
 <%@page import="java.lang.String"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <jsp:useBean id="PtaxController" class="br.com.bb.cbe.controllers.PtaxController"/>
@@ -16,6 +17,7 @@
 <%@page import="br.com.bb.cbe.Bean.Ptax"%>
 
 <jsp:useBean id="numeroUtils" class="br.com.bb.cbe.Utils.NumeroUtils"/>
+<jsp:useBean id="consolidadoUtils" class="br.com.bb.cbe.Utils.ConsolidadoUtils"/>
 <jsp:useBean id="dataUtils" class="br.com.bb.cbe.Utils.DataUtils"/>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@page import="java.util.List"%>
@@ -53,37 +55,54 @@
         
          <%
                
-                int trimestreSelecionado = Integer.parseInt(request.getParameter("tri"));
-                int anoSelecionado = Integer.parseInt(request.getParameter("ano"));
+                    int trimestreSelecionado = Integer.parseInt(request.getParameter("tri"));
+                    int anoSelecionado = Integer.parseInt(request.getParameter("ano"));
 
-            String contabilJson = ConsolidadoController.obterJsonComparacao(trimestreSelecionado, anoSelecionado);
-            System.out.println("TRIMESTRE: ");
- 
+                    String contabilJson = ConsolidadoController.obterJsonComparacao(trimestreSelecionado, anoSelecionado);
+                    System.out.println("TRIMESTRE: ");
 
-        
-            String taxasJson = PtaxController.getAllTaxasJson();
-            String fichasJson8 = ficha08Controller.getAllFichasJson();
-            String fichasJson16 = ficha16Controller.getAllFichasJson();
-            String fichasJson3 = ficha03Controller.getAllFichasJson();
+                    String taxasJson = PtaxController.getAllTaxasJson();
+                    String fichasJson8 = ficha08Controller.getAllFichasJson();
+                    String fichasJson16 = ficha16Controller.getAllFichasJson();
+                    String fichasJson3 = ficha03Controller.getAllFichasJson();
 //            String contabilJson = ContabilController.getAllCosifsJson();
-          
-            System.out.println("TRIMESTRE PARAM: ");
+
+                    System.out.println("TRIMESTRE PARAM: ");
 //            System.out.println(trimestreParam);
-            //contabilJson = ConsolidadoController.obterJsonComparacao(trimestreParam);
+                    //contabilJson = ConsolidadoController.obterJsonComparacao(trimestreParam);
 
-            request.setAttribute("taxasJson", taxasJson);
-            request.setAttribute("fichasJson8", fichasJson8);
-            request.setAttribute("fichasJson16", fichasJson16);
-            request.setAttribute("fichasJson3", fichasJson3);
-            request.setAttribute("contabilJson", contabilJson);
-            
-        
-        Gson gson = new Gson();
-        Type tipoListaMap = new TypeToken<List<Map<String, Object>>>(){}.getType();
-        List<Map<String, Object>> lista = gson.fromJson(contabilJson, tipoListaMap);
-        request.setAttribute("contabilJson", lista);
+                    request.setAttribute("taxasJson", taxasJson);
+                    request.setAttribute("fichasJson8", fichasJson8);
+                    request.setAttribute("fichasJson16", fichasJson16);
+                    request.setAttribute("fichasJson3", fichasJson3);
+                    request.setAttribute("contabilJson", contabilJson);
 
-          
+                    Gson gson = new Gson();
+                    Type tipoListaMap = new TypeToken<List<Map<String, Object>>>() {
+                    }.getType();
+                    List<Map<String, Object>> lista = gson.fromJson(contabilJson, tipoListaMap);
+                    request.setAttribute("contabilJson", lista);
+
+                    String triParam = request.getParameter("tri");
+                    String anoParam = request.getParameter("ano");
+
+                    // Se por acaso vier nulo (link errado), usamos 0 para não quebrar a tela com erro 500
+                    int tInt = (triParam != null) ? Integer.parseInt(triParam) : 0;
+                    int aInt = (anoParam != null) ? Integer.parseInt(anoParam) : 0;
+
+                    // 2. Faz os cálculos usando o Helper
+                    double vFicha01 = consolidadoUtils.getValorTotalEmDolar("ficha01", tInt, aInt);
+                    double vFicha03 = consolidadoUtils.getValorTotalEmDolar("ficha03", tInt, aInt);
+                    double vFicha08 = consolidadoUtils.getValorTotalEmDolar("ficha08", tInt, aInt);
+                    double vFicha09 = consolidadoUtils.getValorTotalEmDolar("ficha09", tInt, aInt);
+                    double vFicha11 = consolidadoUtils.getValorTotalEmDolar("ficha11", tInt, aInt);
+                    double vFicha16 = consolidadoUtils.getValorTotalEmDolar("ficha16", tInt, aInt);
+                    double vFicha18 = consolidadoUtils.getValorTotalEmDolar("ficha18", tInt, aInt);
+
+                    double totalGeral = vFicha01 + vFicha03 + vFicha08 + vFicha09 + vFicha11 + vFicha16 + vFicha18;
+
+                    Map<String, Double> valoresSalvos = ConsolidadoDAO.getValoresBacen(tInt, aInt);
+
         %>
        <!--CONTEX PATH PRA USAR NA VALIDAÇÃO-->
        <input type="hidden" id="contextPath" value="<%=request.getContextPath()%>">
@@ -181,9 +200,147 @@
                 </div>
             </div>
         </div>
-        <!--LEMBRA DE IGNORAR O CONTABIL-->
+        
+<br><br>
+    
+<div class="view-container"> 
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-family: Arial, sans-serif; color: #003366; margin: 0;">Resumo dos ativos (Valores convertidos para USD)</h3>
+            <button type="button" class="btn salvar" onclick="salvarValoresBacen()">Salvar Valores Bacen</button>
+        </div>
+
+        <table border="1" class="table-lista-fichas" id="tabelaResumo">
+            <thead>
+
+                    <th style="padding: 10px;">Descrição ou Ativos consolidados</th>
+                    <th style="padding: 10px;">Valor Ficha (US$)</th>
+                    <th style="padding: 10px; width: 150px;">Valor Bacen (US$) <br><small>(Manual)</small></th>
+                    <th style="padding: 10px;">Diferença (US$)</th>
+                    <th style="padding: 10px; width: 80px;">(%)</th> </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: left">Ações negociadas em bolsa</td>
+                    <td class="val-ficha" data-valor="<%= vFicha01 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha01) %></td>
+                    <td style="text-align: center;">
+                        <% double val01 = valoresSalvos.getOrDefault("ficha01", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha01" 
+                               value="<%= val01 != 0 ? numeroUtils.doubleToString(val01) : "" %>" 
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Câmbio Manual</td>
+                    <td class="val-ficha" data-valor="<%= vFicha03 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha03) %></td>
+                    <td style="text-align: center;">
+                        <% double val03 = valoresSalvos.getOrDefault("ficha03", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha03"
+                               value="<%= val03 != 0 ? numeroUtils.doubleToString(val03) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Depósitos à vista e a prazo</td>
+                    <td class="val-ficha" data-valor="<%= vFicha08 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha08) %></td>
+                    <td style="text-align: center;">
+                        <% double val08 = valoresSalvos.getOrDefault("ficha08", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha08"
+                               value="<%= val08 != 0 ? numeroUtils.doubleToString(val08) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Derivativo - Futuro e swap</td>
+                    <td class="val-ficha" data-valor="<%= vFicha09 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha09) %></td>
+                    <td style="text-align: center;">
+                        <% double val09 = valoresSalvos.getOrDefault("ficha09", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha09"
+                               value="<%= val09 != 0 ? numeroUtils.doubleToString(val09) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Empresas - Participação no capital</td>
+                    <td class="val-ficha" data-valor="<%= vFicha11 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha11) %></td>
+                    <td style="text-align: center;">
+                        <% double val11 = valoresSalvos.getOrDefault("ficha11", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha11"
+                               value="<%= val11 != 0 ? numeroUtils.doubleToString(val11) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Outros Direitos</td>
+                    <td class="val-ficha" data-valor="<%= vFicha16 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha16) %></td>
+                    <td style="text-align: center;">
+                        <% double val16 = valoresSalvos.getOrDefault("ficha16", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha16"
+                               value="<%= val16 != 0 ? numeroUtils.doubleToString(val16) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: right;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+
+                <tr>
+                    <td style="text-align: left">Título de dívida não-intercompanhia</td>
+                    <td class="val-ficha" data-valor="<%= vFicha18 %>" style="text-align: center;"><%= numeroUtils.doubleToString(vFicha18) %></td>
+                    <td style="text-align: center;">
+                        <% double val18 = valoresSalvos.getOrDefault("ficha18", 0.0); %>
+                        <input type="text" class="input-bacen" data-ficha-nome="ficha18"
+                               value="<%= val18 != 0 ? numeroUtils.doubleToString(val18) : "" %>"
+                               placeholder="" 
+                               onkeyup="calcularLinha(this)" 
+                               style="width: 90%; text-align: center;">
+                    </td>
+                    <td class="val-diferenca" style="text-align: center;">0,00</td>
+                    <td class="val-porcentagem" style="text-align: center;">0,00%</td>
+                </tr>
+            </tbody>
+<tfoot>
+                <tr style="background-color: #0038a8; color: #ffffff; font-weight: bold;">
+                    <td style="text-align: center; padding: 10px;">TOTAL GERAL</td>
+                    <td style="text-align: center; padding: 10px;" id="total-ficha"><%= numeroUtils.doubleToString(totalGeral) %></td>
+                    <td style="text-align: center; padding: 10px;" id="total-bacen">0,00</td>
+                    <td style="text-align: center; padding: 10px;" id="total-diferenca"><%= numeroUtils.doubleToString(totalGeral) %></td>
+                    <td style="text-align: center; padding: 10px;" id="total-porcentagem">0,00%</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+        
         <script>
 
+            var trimestreAtual = <%= tInt%>;
+            var anoAtual = <%= aInt%>;
+            var contextPath = '${pageContext.request.contextPath}';
 
 //            var taxasJson = '$//{taxasJson}';
 //            var fichasJson8 = '$//{fichasJson8}';

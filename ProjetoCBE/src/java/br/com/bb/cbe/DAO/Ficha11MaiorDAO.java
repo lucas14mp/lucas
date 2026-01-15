@@ -4,6 +4,7 @@ import br.com.bb.cbe.Bean.Ficha11Maior;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.conexao.*;
 import br.com.bb.cbe.controllers.*;
+import br.com.bb.cbe.DAO.PtaxDAO;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -570,6 +571,123 @@ public class Ficha11MaiorDAO {
                 Conexao.fecharConexao(connection, pst, rs);
             }
         return false; // Retorna false se não encontrar nada
+    }
+    
+    public static double getSomaPatrimonioPonderado(int trimestreRef, int anoRef, int idDependencia) {
+        double totalBrl = 0.0;
+        
+        // 1. Lógica do Trimestre (Mantida da última versão correta)
+        int triBusca = trimestreRef + 1;
+        int anoBusca = anoRef;
+        
+        if (triBusca > 4) {
+            triBusca = 1;
+            anoBusca = anoRef + 1;
+        }
+        
+        // 2. SQL COM FILTRO DE DIRETORIA
+        // Adicionamos: AND (f.diretoria IS NULL OR f.diretoria <> 'UPE')
+        // Isso remove a UPE da soma, mantendo o resto.
+        
+        String sql = "SELECT f.patrimonio_total, f.participacao_capital_social, f.id_moeda " + 
+                     "FROM ficha11_participacao_maior f " + 
+                     "INNER JOIN funcionario func ON f.chave = func.chave " +
+                     "WHERE f.trimestre = ? " +
+                     "  AND YEAR(f.data_criacao) = ? " +
+                     "  AND func.id_dependencia = ? " +
+                     "  AND (f.diretoria IS NULL OR f.diretoria <> 'UPE')"; 
+
+        System.out.println(">>> [DEBUG F11.2] Buscando T" + triBusca + "/" + anoBusca + 
+                           " (Ref T" + trimestreRef + ") - Excluindo UPE");
+
+        try (Connection con = Conexao.conectar();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setInt(1, triBusca);
+            pst.setInt(2, anoBusca);
+            pst.setInt(3, idDependencia); // 9568
+
+            ResultSet rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                double patrimonio = rs.getDouble("patrimonio_total");
+                double participacaoPct = rs.getDouble("participacao_capital_social");
+                int idMoeda = rs.getInt("id_moeda");
+                
+                // Conversão PTAX (Usa Tri de Referência)
+                double taxaMoeda = PtaxDAO.getTaxaCompra(idMoeda, trimestreRef, anoRef);
+                
+                double patrimonioReais = patrimonio * taxaMoeda;
+                double valorFinalLinha = patrimonioReais * (participacaoPct / 100.0);
+                
+                totalBrl += valorFinalLinha;
+            }
+            
+            System.out.println(">>> [F11.2] Total Final (Sem UPE): R$ " + totalBrl);
+            return totalBrl;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0.0;
+        }
+    }
+    
+    public static double getSomaPatrimonioPonderadoUPE(int trimestreRef, int anoRef, int idDependencia) {
+        double totalBrl = 0.0;
+        
+        // 1. Lógica do Trimestre de Busca (Mesma da 11.2)
+        int triBusca = trimestreRef + 1;
+        int anoBusca = anoRef;
+        
+        if (triBusca > 4) {
+            triBusca = 1;
+            anoBusca = anoRef + 1;
+        }
+        
+        // 2. SQL FILTRANDO APENAS UPE
+        // Diferença aqui: AND f.diretoria = 'UPE'
+        
+        String sql = "SELECT f.patrimonio_total, f.participacao_capital_social, f.id_moeda " + 
+                     "FROM ficha11_participacao_maior f " + 
+                     "INNER JOIN funcionario func ON f.chave = func.chave " +
+                     "WHERE f.trimestre = ? " +
+                     "  AND YEAR(f.data_criacao) = ? " +
+                     "  AND func.id_dependencia = ? " +
+                     "  AND f.diretoria = 'UPE'"; 
+
+        System.out.println(">>> [DEBUG F11.4 UPE] Buscando T" + triBusca + "/" + anoBusca + 
+                           " (Ref T" + trimestreRef + ") - Somente UPE");
+
+        try (Connection con = Conexao.conectar();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setInt(1, triBusca);
+            pst.setInt(2, anoBusca);
+            pst.setInt(3, idDependencia); // 9568
+
+            ResultSet rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                double patrimonio = rs.getDouble("patrimonio_total");
+                double participacaoPct = rs.getDouble("participacao_capital_social");
+                int idMoeda = rs.getInt("id_moeda");
+                
+                // Conversão PTAX (Usa Tri de Referência)
+                double taxaMoeda = PtaxDAO.getTaxaCompra(idMoeda, trimestreRef, anoRef);
+                
+                double patrimonioReais = patrimonio * taxaMoeda;
+                double valorFinalLinha = patrimonioReais * (participacaoPct / 100.0);
+                
+                totalBrl += valorFinalLinha;
+            }
+            
+            System.out.println(">>> [F11.4 UPE] Total Final: R$ " + totalBrl);
+            return totalBrl;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0.0;
+        }
     }
     
 }

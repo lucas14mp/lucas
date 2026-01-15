@@ -4,6 +4,7 @@ import br.com.bb.cbe.Bean.*;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.conexao.*;
 import br.com.bb.cbe.controllers.*;
+import br.com.bb.cbe.DAO.PtaxDAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -294,5 +295,51 @@ public class Ficha11MenorDAO {
                 Conexao.fecharConexao(connection, pst, rs);
             }
         return false; // Retorna false se não encontrar nada
+    }
+    
+    public static double getSomaPorDependencia(int trimestre, int ano, int idDependencia) {
+        double totalBrl = 0.0;
+        
+        // SQL Busca valor original e a moeda
+        String sql = "SELECT f.valor_participacao, f.id_moeda " + 
+                     "FROM ficha11_participacao_menor f " + 
+                     "INNER JOIN funcionario func ON f.chave = func.chave " + 
+                     "WHERE f.trimestre = ? AND YEAR(f.data_criacao) = ? AND func.id_dependencia = ?";
+
+        System.out.println(">>> [DEBUG F11.1] Iniciando (Retornando em REAIS) para Dep: " + idDependencia);
+
+        try (Connection con = Conexao.conectar();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setInt(1, trimestre);
+            pst.setInt(2, ano);
+            pst.setInt(3, idDependencia);
+
+            ResultSet rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                double valorOriginal = rs.getDouble("valor_participacao");
+                int idMoeda = rs.getInt("id_moeda");
+                
+                // Converte da moeda original para REAIS (BRL)
+                double taxaMoedaParaBrl = PtaxDAO.getTaxaCompra(idMoeda, trimestre, ano);
+                double valorEmReais = valorOriginal * taxaMoedaParaBrl;
+                
+                totalBrl += valorEmReais;
+                
+                System.out.println(String.format(">>> [ITEM] Moeda %d: %.2f * %.4f = R$ %.2f", 
+                        idMoeda, valorOriginal, taxaMoedaParaBrl, valorEmReais));
+            }
+            
+            // --- CORREÇÃO: RETORNAMOS O TOTAL EM BRL DIRETAMENTE ---
+            // Não dividimos mais pelo Dólar, pois a tela de conciliação é em Reais.
+            
+            System.out.println(">>> [TOTAL] Final em Reais: R$ " + totalBrl);
+            return totalBrl;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0.0;
+        }
     }
 }
