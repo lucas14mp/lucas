@@ -3,6 +3,7 @@ package br.com.bb.cbe.controllers;
 import br.com.bb.cbe.DAO.ConsolidadoDAO;
 import br.com.bb.cbe.DAO.Ficha11MaiorDAO;
 import br.com.bb.cbe.DAO.Ficha11MenorDAO; // <--- IMPORTANTE: Adicione este import
+import br.com.bb.cbe.DAO.Ficha18DAO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -23,41 +24,53 @@ public class ComparadorService {
         return gson.toJson(resultados);
     }
 
-public static List<Map<String, Object>> compararConsolidadoComFichas(List<String> fichas, int mesReferencia, int ano, Integer idDependencia) {
+    public static List<Map<String, Object>> compararConsolidadoComFichas(List<String> fichas, int mesReferencia, int ano, Integer idDependencia) {
         List<Map<String, Object>> resultadosAgrupados = new ArrayList<>();
 
-        // 1. Apenas calcula o Trimestre de REFERÊNCIA (Contábil)
-        // Ex: Mês 9 -> Tri 3
+        // 1. Configura o Trimestre de REFERÊNCIA (Contábil / PTAX)
         int trimestreRef = mesReferencia / 3;
+        int anoRef = ano;
+
+        // 2. Configura o Trimestre de BUSCA (Para a Ficha 18 usar)
+        // Regra: O dado está gravado no trimestre seguinte
+        int triBusca = trimestreRef + 1;
+        int anoBusca = ano;
         
-        // Passamos 'trimestreRef' e 'ano' puros. O DAO que decida se busca no tri seguinte.
+        if (triBusca > 4) {
+            triBusca = 1;
+            anoBusca = ano + 1;
+        }
 
         for (String ficha : fichas) {
             double valorFicha = 0.0;
 
+            // --- LÓGICA DE CADA FICHA ---
+
             if ("11.1".equals(ficha)) {
-                // Ficha 11.1 -> Dep 9958
-                // DAO deve tratar a busca no trimestre seguinte internamente
+                // Mantém como estava (usa trimestreRef)
                 valorFicha = Ficha11MenorDAO.getSomaPorDependencia(trimestreRef, ano, 9958);
             
             } else if ("11.2".equals(ficha)) {
-                // Ficha 11.2 -> Dep 9568
-                // DAO deve tratar a busca no trimestre seguinte internamente
+                // Mantém como estava (usa trimestreRef)
                 valorFicha = Ficha11MaiorDAO.getSomaPatrimonioPonderado(trimestreRef, ano, 9568);
                 
-                } else if ("11.4".equals(ficha)) {
-                // Ficha 11.4 -> Dep 9568 (Ficha Maior - Somente UPE)
+            } else if ("11.4".equals(ficha)) {
+                // Mantém como estava (usa trimestreRef)
                 valorFicha = Ficha11MaiorDAO.getSomaPatrimonioPonderadoUPE(trimestreRef, ano, 9568);
                 
+            } else if ("18".equals(ficha)) {
+                // --- CORREÇÃO FICHA 18 ---
+                // Agora as variáveis 'triBusca' e 'anoBusca' existem e funcionam!
+                valorFicha = Ficha18DAO.getSomaTotalComJuros(triBusca, anoBusca, trimestreRef, anoRef);
+                
             } else {
-                // Outras Fichas
-                // Se as outras fichas NÃO têm a regra de "preencher no trimestre seguinte", elas vão funcionar normal com o triRef.
-                // Se elas TÊM a regra, os DAOs delas também devem ser ajustados.
+                // Outras fichas (usa trimestreRef, o DAO faz o shift internamente)
                 Map<String, Object> fichaData = ConsolidadoDAO.getSomaFichaByTrimestreAno(ficha, trimestreRef, ano);
                 valorFicha = ((Number) fichaData.getOrDefault("valorFicha", 0.0)).doubleValue();
             }
 
-            // ... (Restante do código de buscar o Contábil e montar o JSON permanece inalterado) ...
+            // --- FIM DA LÓGICA DE VALOR ---
+
             List<Map<String, Object>> consolidadoDataList = ConsolidadoDAO.getConsolidadoByFicha(ficha, mesReferencia, ano);
             if (consolidadoDataList == null || consolidadoDataList.isEmpty()) {
                 continue;

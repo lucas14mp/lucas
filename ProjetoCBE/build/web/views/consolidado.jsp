@@ -200,14 +200,14 @@
                 </div>
             </div>
         </div>
-        
-<br><br>
-    
-<div class="view-container"> 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="font-family: Arial, sans-serif; color: #003366; margin: 0;">Resumo dos ativos (Valores convertidos para USD)</h3>
-            <button type="button" class="btn salvar" onclick="salvarValoresBacen()">Salvar Valores Bacen</button>
-        </div>
+
+        <br><br>
+
+        <div class="view-container"> 
+            <div style="display: flex; align-items: center; width: 95%; margin: 0 auto 10px auto;">
+                <h3 style="flex: 1; margin: 0;">Resumo dos ativos</h3>
+                <button type="button" class="btn salvar" onclick="salvarValoresBacen()">Salvar Valores Bacen</button>
+            </div>
 
         <table border="1" class="table-lista-fichas" id="tabelaResumo">
             <thead>

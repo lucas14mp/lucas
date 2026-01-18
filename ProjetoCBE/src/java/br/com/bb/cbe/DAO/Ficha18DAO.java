@@ -6,6 +6,7 @@ import br.com.bb.cbe.controllers.FuncionarioController;
 import br.com.bb.cbe.controllers.MoedaController;
 import br.com.bb.cbe.controllers.PaisController;
 import br.com.bb.cbe.controllers.StatusController;
+import br.com.bb.cbe.DAO.PtaxDAO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -419,4 +420,49 @@ public class Ficha18DAO {
         }
     }
     
+    public static double getSomaTotalComJuros(int triBusca, int anoBusca, int triRef, int anoRef) {
+        double totalBrl = 0.0;
+        
+        // SQL: Busca os valores no trimestre onde o dado foi GRAVADO (Busca)
+        String sql = "SELECT f.valor_mercado, f.juros_recebidos, f.id_moeda " + 
+                     "FROM ficha18 f " + 
+                     "WHERE f.trimestre = ? AND YEAR(f.data_criacao) = ?";
+
+        Connection connection = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        try {
+            connection = Conexao.conectar();
+            pst = connection.prepareStatement(sql);
+            pst.setInt(1, triBusca);
+            pst.setInt(2, anoBusca);
+
+            rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                double valMercado = rs.getDouble("valor_mercado");
+                // Garante que se juros for nulo, usa 0.0
+                double valJuros = rs.getObject("juros_recebidos") != null ? rs.getDouble("juros_recebidos") : 0.0; 
+                int idMoeda = rs.getInt("id_moeda");
+                
+                // 1. SOMA (Mercado + Juros) na moeda original
+                double totalOriginal = valMercado + valJuros;
+                
+                // 2. Busca a PTAX do Trimestre de REFERÊNCIA (o do Balancete)
+                double taxaMoeda = PtaxDAO.getTaxaCompra(idMoeda, triRef, anoRef);
+                
+                // 3. Converte
+                totalBrl += (totalOriginal * taxaMoeda);
+            }
+            
+            return totalBrl;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0.0;
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
+        }
+    }
 }
