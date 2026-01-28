@@ -1,23 +1,19 @@
 package br.com.bb.cbe.controllers;
 
-import br.com.bb.cbe.Bean.Ficha11Menor;
-import br.com.bb.cbe.Bean.Funcionario;
-import br.com.bb.cbe.Bean.Moeda;
-import br.com.bb.cbe.Bean.Pais;
-import br.com.bb.cbe.Bean.Status;
-import br.com.bb.cbe.DAO.Ficha11MenorDAO;
-import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.conexao.Conexao;
+import com.google.gson.Gson; // Certifique-se de ter o GSON importado
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -36,20 +32,19 @@ public class UploadFicha11MenorController extends HttpServlet {
             throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
-        
-        String chave = (String) req.getSession().getAttribute("chave");
-        if (chave == null || chave.isEmpty()) {
-            resp.getWriter().println("Erro: Sessão expirada ou usuário não identificado.");
-            return;
-        }
+        resp.setContentType("application/json"); 
+        resp.setCharacterEncoding("UTF-8");
 
         Part filePart = req.getPart("arquivoExcel");
+        PrintWriter out = resp.getWriter();
+        Gson gson = new Gson();
+
         if (filePart == null || filePart.getSize() == 0) {
-            resp.getWriter().println("Erro: Nenhum arquivo enviado.");
+            out.print(gson.toJson(Map.of("erro", "Nenhum arquivo enviado.")));
             return;
         }
 
-        List<Ficha11Menor> listaParaSalvar = new ArrayList<>();
+        List<Map<String, Object>> listaParaFrontend = new ArrayList<>();
         InputStream fileContent = filePart.getInputStream();
         Connection conn = null;
 
@@ -63,22 +58,24 @@ public class UploadFicha11MenorController extends HttpServlet {
             while (iter.hasNext()) {
                 Row row = iter.next();
                 
-                // REMOVIDO: O código agora processa a partir da linha 0 (sem cabeçalho).
-                
+                // Pula cabeçalho se necessário (se a linha 0 não tiver dados válidos de país)
+                // Ajuste conforme sua planilha real. Se a planilha não tem cabeçalho, remova o if.
+                // if (row.getRowNum() == 0) continue; 
+
                 // --- 1. País (Coluna A) ---
                 String nomePais = formatter.formatCellValue(row.getCell(0)).trim();
-                if (nomePais.isEmpty()) continue; // Ignora linhas vazias
+                if (nomePais.isEmpty()) continue;
                 
                 int idPais = buscarIdPais(conn, nomePais);
                 if (idPais == -1) {
-                    throw new Exception("País não encontrado no banco de dados: " + nomePais);
+                    throw new Exception("País não encontrado: " + nomePais);
                 }
 
                 // --- 2. Moeda (Coluna B) ---
                 String nomeMoeda = formatter.formatCellValue(row.getCell(1)).trim();
                 int idMoeda = buscarIdMoeda(conn, nomeMoeda);
                 if (idMoeda == -1) {
-                    throw new Exception("Moeda não encontrada no banco de dados: " + nomeMoeda);
+                    throw new Exception("Moeda não encontrada: " + nomeMoeda);
                 }
 
                 // --- 3. Método Valoração (Coluna C) ---
@@ -92,44 +89,28 @@ public class UploadFicha11MenorController extends HttpServlet {
                 String lucroDistStr = limparNumero(formatter.formatCellValue(row.getCell(4)));
                 Double lucroDist = lucroDistStr.isEmpty() ? 0.0 : Double.parseDouble(lucroDistStr);
 
-                // --- Monta o Objeto Ficha11Menor ---
-                Ficha11Menor ficha = new Ficha11Menor();
-                
-                Pais p = new Pais();
-                p.setId(idPais);
-                ficha.setPais(p);
+                // --- Cria Objeto MAP para o JSON ---
+                Map<String, Object> item = new HashMap<>();
+                item.put("id_pais", idPais);
+                item.put("nome_pais", nomePais);
+                item.put("id_moeda", idMoeda);
+                item.put("nome_moeda", nomeMoeda);
+                item.put("metodo", metodo);
+                item.put("valor_participacao", valorPart);
+                item.put("lucro_distribuido", lucroDist);
 
-                Moeda m = new Moeda();
-                m.setId(idMoeda);
-                ficha.setMoeda(m);
-
-                ficha.setMetodoValoracao(metodo);
-                ficha.setValorParticipacao(valorPart);
-                ficha.setLucroDistribuido(lucroDist);
-                
-                ficha.setDataCriacao(new Date());
-                ficha.setTrimestre(DataUtils.validaTrimestre());
-                
-                Funcionario f = new Funcionario();
-                f.setChave(chave);
-                ficha.setFuncionario(f);
-
-                Status s = new Status();
-                s.setId(1); 
-                ficha.setStatus(s);
-
-                listaParaSalvar.add(ficha);
+                listaParaFrontend.add(item);
             }
 
-            if (!listaParaSalvar.isEmpty()) {
-                Ficha11MenorDAO.createBatch(listaParaSalvar);
-            }
-
-            resp.sendRedirect(req.getContextPath() + "/views/ficha11.jsp?msg=SucessoUpload");
+            // Retorna a lista como JSON para o JavaScript
+            out.print(gson.toJson(listaParaFrontend));
 
         } catch (Exception e) {
             e.printStackTrace();
-            resp.getWriter().println("Erro durante o processamento do arquivo: " + e.getMessage());
+            // Retorna erro em JSON
+            Map<String, String> erro = new HashMap<>();
+            erro.put("erro", e.getMessage());
+            out.print(gson.toJson(erro));
         } finally {
             if(conn != null) Conexao.fecharConexao(conn, null, null);
             if (fileContent != null) fileContent.close();
@@ -162,8 +143,7 @@ public class UploadFicha11MenorController extends HttpServlet {
         if (val == null || val.trim().isEmpty()) return "";
         String str = val.trim();
         if (str.contains(",")) {
-            str = str.replace(".", "");
-            str = str.replace(",", ".");
+            str = str.replace(".", "").replace(",", ".");
         }
         return str;
     }

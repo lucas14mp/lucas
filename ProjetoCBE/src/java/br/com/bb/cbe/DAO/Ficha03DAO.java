@@ -338,6 +338,10 @@ public class Ficha03DAO {
             triReferencia = 4;
             anoReferencia = anoFicha - 1;
         }
+        
+    System.out.println("===== VALIDACAO FICHA 03 =====");
+    System.out.println("Ficha Atual: " + trimestreFicha + "/" + anoFicha);
+    System.out.println("Busca no Banco (Referencia): Tri " + triReferencia + "/" + anoReferencia);
 
         try {
             connection = Conexao.conectar();
@@ -363,6 +367,9 @@ public class Ficha03DAO {
             if (rs.next()) {
                 valorPlanilhaBrl = rs.getDouble("total_consolidado");
             }
+            
+        System.out.println("Valor Informado: " + valorInformadoOriginal);
+        System.out.println("Valor Banco (Tri " + triReferencia + "): " + valorPlanilhaBrl);
 
             // Validação ( > 0.5% )
             if (valorPlanilhaBrl != 0) {
@@ -370,6 +377,7 @@ public class Ficha03DAO {
                 double percentual = (diferenca / valorPlanilhaBrl) * 100;
                 if (percentual > 0.5) {
                     precisaJustificar = true;
+                    System.out.println("Diferenca Calculada: " + String.format("%.2f", percentual) + "%");
                 }
             } else if (valorInformadoOriginal != 0) {
                 precisaJustificar = true;

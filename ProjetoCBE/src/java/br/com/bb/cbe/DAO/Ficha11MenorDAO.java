@@ -41,46 +41,51 @@ public class Ficha11MenorDAO {
         }
 
     }
-
-    public static void createBatch(List<Ficha11Menor> fichas) {
-        System.out.println("ENTROU NO CREATE");
-        String sql = "INSERT INTO ficha11_participacao_menor (metodo_valoracao, valor_participacao, lucro_distribuido, data_criacao, trimestre, id_moeda, id_pais, chave, id_status) VALUES (?,?,?,?,?,?,?,?,?)";
-        Connection connection = null;
+//
+public static void createBatch(List<Ficha11Menor> listaFichas) {
+        String sql = "INSERT INTO ficha11_participacao_menor "
+                   + "(metodo_valoracao, valor_participacao, lucro_distribuido, data_criacao, trimestre, id_moeda, id_pais, chave, id_status, justificativa_gestor) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        Connection conn = null;
         PreparedStatement pst = null;
-        try {
-            connection = Conexao.conectar();
-            connection.setAutoCommit(false); // Desabilita o auto-commit para usar transações
-            pst = connection.prepareStatement(sql);
 
-            for (Ficha11Menor ficha : fichas) {
+        try {
+            conn = Conexao.conectar();
+            conn.setAutoCommit(false); // Importante para performance e integridade do lote
+            pst = conn.prepareStatement(sql);
+
+            for (Ficha11Menor ficha : listaFichas) {
                 pst.setString(1, ficha.getMetodoValoracao());
                 pst.setDouble(2, ficha.getValorParticipacao());
                 pst.setDouble(3, ficha.getLucroDistribuido());
                 pst.setDate(4, new java.sql.Date(ficha.getDataCriacao().getTime()));
-                pst.setInt(5, DataUtils.validaTrimestre());
+                pst.setInt(5, ficha.getTrimestre());
                 pst.setInt(6, ficha.getMoeda().getId());
                 pst.setInt(7, ficha.getPais().getId());
                 pst.setString(8, ficha.getFuncionario().getChave());
                 pst.setInt(9, ficha.getStatus().getId());
-                pst.addBatch();
-            }
-            pst.executeBatch(); // Executa todas as inserções em lote
-            connection.commit(); // Confirma a transação
-            System.out.println("CRIOU MENOR" );
-        } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback(); // Reverte a transação em caso de erro
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
+                
+                if (ficha.getJustificativaGestor() != null && !ficha.getJustificativaGestor().isEmpty()) {
+                    pst.setString(10, ficha.getJustificativaGestor());
+                } else {
+                    pst.setNull(10, java.sql.Types.VARCHAR);
                 }
+
+                pst.addBatch(); // Adiciona ao lote
             }
+
+            pst.executeBatch(); // Executa todos de uma vez
+            conn.commit();      // Confirma a transação
+
+        } catch (SQLException e) {
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             e.printStackTrace();
         } finally {
-            Conexao.fecharConexao(connection, pst, null);
+            Conexao.fecharConexao(conn, pst, null);
         }
     }
-    
+//    
     public static void update(Ficha11Menor ficha) {
 
         String sql = "UPDATE ficha11_participacao_menor SET metodo_valoracao = ?, valor_participacao = ?, lucro_distribuido = ?, id_moeda = ?, id_pais = ?, chave = ?, data_criacao = ? WHERE id = ?";
@@ -341,5 +346,63 @@ public class Ficha11MenorDAO {
             e.printStackTrace();
             return 0.0;
         }
+    }
+    
+    // Método de Validação com a Planilha 4010
+    // Filtra consolidado por '11.1' (Participação Menor/Renda Variável)
+    public static boolean verificarNecessidadeJustificativa(double valorInformadoOriginal, int trimestreFicha, int anoFicha) {
+        Connection connection = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        boolean precisaJustificar = false;
+
+        int triReferencia = trimestreFicha - 1;
+        int anoReferencia = anoFicha;
+
+        // Ajusta se for primeiro trimestre (vira 4º tri do ano anterior)
+        if (triReferencia == 0) {
+            triReferencia = 4;
+            anoReferencia = anoFicha - 1;
+        }
+
+        try {
+            connection = Conexao.conectar();
+            StringBuilder sql = new StringBuilder();
+            
+            // Soma o valor da Tabela 4010 para as contas associadas à Ficha 11 Menor (11.1)
+            sql.append("SELECT SUM(COALESCE(r.CONSOLIDADO, 0)) as total_consolidado ");
+            sql.append("FROM consolidado c ");
+            sql.append("LEFT JOIN planilha4010 r ON r.CD_CT_PLN = c.cosif AND r.CD_IOR = c.CD_IOR AND r.CD_RBC = c.CD_RBC ");
+            sql.append("AND QUARTER(r.DT_EVD) = ? AND YEAR(r.DT_EVD) = ? ");
+            sql.append("WHERE c.ficha = '11.1' "); 
+
+            pst = connection.prepareStatement(sql.toString());
+            pst.setInt(1, triReferencia);
+            pst.setInt(2, anoReferencia);
+            rs = pst.executeQuery();
+
+            double valorPlanilhaBrl = 0.0;
+            if (rs.next()) {
+                valorPlanilhaBrl = rs.getDouble("total_consolidado");
+            }
+
+            // Lógica de comparação (Exemplo: Tolerância de 0.5%)
+            // Se o banco não tiver dados (0.0), geralmente aceita-se o valor novo sem travar,
+            // mas se houver valor histórico, valida a divergência.
+            if (valorPlanilhaBrl != 0) {
+                double diferenca = Math.abs(valorInformadoOriginal - valorPlanilhaBrl);
+                if ((diferenca / valorPlanilhaBrl) * 100 > 0.5) {
+                    precisaJustificar = true;
+                }
+            } 
+            // Se quiser forçar justificativa para novos aportes (valorPlanilha == 0 e valorInformado > 0), descomente:
+            // else if (valorInformadoOriginal > 0) { precisaJustificar = true; }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Conexao.fecharConexao(connection, pst, rs);
+        }
+        return precisaJustificar;
     }
 }

@@ -97,7 +97,7 @@ public class ConsolidadoController extends HttpServlet {
         // 1 -> 3 (Março), 2 -> 6 (Junho), 3 -> 9 (Setembro), 4 -> 12 (Dezembro)
         int mesReferencia = trimestreSelecionado * 3;
 
-        List<String> fichas = Arrays.asList("1", "3", "8", "11.1", "11.2", "11.3", "11.4", "16", "18");
+        List<String> fichas = Arrays.asList("1", "3", "8.1", "8.2", "11.1", "11.2", "11.3", "11.4", "16", "18");
 
         // Chama o serviço passando o mês calculado (para o contábil)
         // E o ano selecionado.

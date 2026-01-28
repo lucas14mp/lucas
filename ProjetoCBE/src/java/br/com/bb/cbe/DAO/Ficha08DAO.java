@@ -445,4 +445,61 @@ public class Ficha08DAO {
             Conexao.fecharConexao(connection, pst, null);
         }
     }
+    
+    public static double getSomaPorDependencia(int trimestreRef, int anoRef, Integer idDependencia) {
+        double totalBrl = 0.0;
+        
+        // 1. Lógica do Trimestre da Ficha (T+1 em relação ao Contábil)
+        int triBusca = trimestreRef + 1;
+        int anoBusca = anoRef;
+        
+        if (triBusca > 4) {
+            triBusca = 1;
+            anoBusca = anoRef + 1;
+        }
+
+        // 2. SQL
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT f.saldo_database, f.id_moeda ");
+        sql.append("FROM ficha08 f ");
+        sql.append("INNER JOIN funcionario func ON f.chave = func.chave ");
+        sql.append("WHERE f.trimestre = ? ");
+        sql.append("  AND YEAR(f.data_criacao) = ? ");
+        
+        // Se idDependencia for nulo, não filtra (ou filtra 'is null' se fosse a regra, 
+        // mas aqui deixaremos aberto para somar tudo caso não venha o ID)
+        if (idDependencia != null) {
+            sql.append("  AND func.id_dependencia = ? ");
+        }
+
+        try (Connection con = Conexao.conectar();
+             PreparedStatement pst = con.prepareStatement(sql.toString())) {
+
+            pst.setInt(1, triBusca);
+            pst.setInt(2, anoBusca);
+            
+            if (idDependencia != null) {
+                pst.setInt(3, idDependencia);
+            }
+
+            ResultSet rs = pst.executeQuery();
+            
+            while (rs.next()) {
+                double saldo = rs.getDouble("saldo_database");
+                int idMoeda = rs.getInt("id_moeda");
+                
+                // 3. Conversão PTAX (Usa o Trimestre de REFERÊNCIA contábil)
+                double taxa = PtaxDAO.getTaxaCompra(idMoeda, trimestreRef, anoRef);
+                
+                totalBrl += (saldo * taxa);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0.0;
+        }
+        
+        return totalBrl;
+    }
+    
 }

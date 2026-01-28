@@ -1,6 +1,7 @@
 package br.com.bb.cbe.controllers;
 
 import br.com.bb.cbe.DAO.ConsolidadoDAO;
+import br.com.bb.cbe.DAO.Ficha08DAO;
 import br.com.bb.cbe.DAO.Ficha11MaiorDAO;
 import br.com.bb.cbe.DAO.Ficha11MenorDAO; // <--- IMPORTANTE: Adicione este import
 import br.com.bb.cbe.DAO.Ficha18DAO;
@@ -57,6 +58,17 @@ public class ComparadorService {
             } else if ("11.4".equals(ficha)) {
                 // Mantém como estava (usa trimestreRef)
                 valorFicha = Ficha11MaiorDAO.getSomaPatrimonioPonderadoUPE(trimestreRef, ano, 9568);
+            
+            } else if ("8.1".equals(ficha)) { 
+                // COSIF 1.1.5.20.00.00 -> Dependência 9958
+                valorFicha = Ficha08DAO.getSomaPorDependencia(trimestreRef, ano, 9958);
+
+            } else if ("8.2".equals(ficha)) { 
+                // COSIF 1.2.6.10.20.00 -> Dependência a definir
+                // Deixando o espaço conforme solicitado. 
+                // Quando tiver o ID, troque o null pelo número (ex: 9999)
+                Integer idDepFutura = null; 
+                valorFicha = Ficha08DAO.getSomaPorDependencia(trimestreRef, ano, idDepFutura);    
                 
             } else if ("18".equals(ficha)) {
                 // --- CORREÇÃO FICHA 18 ---

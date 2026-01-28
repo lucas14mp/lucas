@@ -196,7 +196,7 @@
                                     <div class="area-upload">
                     <h3 style="color: #333; margin-bottom: 15px;">Anexar Planilha (.xlsx)</h3>
 
-                    <form action="${pageContext.request.contextPath}/UploadFicha11MenorController" method="post" enctype="multipart/form-data">
+                    <form id="formUploadExcel" action="${pageContext.request.contextPath}/UploadFicha11MenorController" method="post" enctype="multipart/form-data">
 
                         <label for="arquivoExcel" style="font-weight: bold; display: block; margin-bottom: 5px;">
                             Selecione o arquivo no seu computador:
@@ -215,6 +215,44 @@
                         </button>
                     </form>
                 </div>
+                    
+
+<hr>
+
+<h3 style="color: #003366;">Itens Adicionados</h3>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="tabelaItens">
+        <thead>
+            <tr>
+                <th>País</th>
+                <th>Moeda</th>
+                <th>Método</th>
+                <th>Valor Participação</th>
+                <th>Lucro Distribuído</th>
+                <th style="width: 80px;">Ação</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
+<div class="botoes" id="areaBotaoFinal" style="display:none; margin-top: 30px; justify-content: center;">
+    <button type="button" class="btn salvar" id="btnFinalizarLote">Salvar e Enviar Ficha</button>
+</div>
+
+<div id="modalJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">
+    <div style="background-color:#fff; margin:10% auto; padding:25px; border:1px solid #888; width:50%; border-radius:8px; text-align:center;">
+        <h2 style="color: #003366;">Aviso de Variação</h2>
+        <p>Valor divergente da base. Justifique:</p>
+        <textarea id="textoJustificativa" rows="5" style="width:100%;"></textarea>
+        <div style="margin-top:10px;">
+            <button type="button" id="btnConfirmarJustificativa" class="btn">Confirmar</button>
+            <button type="button" id="btnCancelarJustificativa" class="btn-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
                                     
                 <!--FIN-->
 
@@ -448,6 +486,7 @@
                                 <div class="teste" id="teste"></div>
                                     
                 <script src="/ProjetoCBE/resources/js/ficha11.js"></script>
+                <script src="../resources/js/Ficha11Menor.js?v=2"></script>
                 <script src="/ProjetoCBE/resources/js/temas.js"></script>
                 <script>
                     function ordenarTabela1() { 
@@ -520,7 +559,7 @@
                         }
                     }
                 </script>
-                <script>
+<!--                <script>
             // Função chamada quando o usuário seleciona um arquivo
             function verificarArquivo() {
                 var input = document.getElementById('arquivoExcel');
@@ -556,7 +595,7 @@
                     e.preventDefault();
                 }
             });
-        </script>
+        </script>-->
             </article>
         </main>                       
     </body>

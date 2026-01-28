@@ -360,13 +360,13 @@ public static boolean verificarNecessidadeJustificativa(double valorInformadoOri
     boolean precisaJustificar = false;
 
     // 1. Lógica do Período: Ficha do Tri 4 (Vigente) -> Compara com Tri 3 (Referência)
-    int triReferencia = trimestreFicha - 1;
+    int triReferencia = trimestreFicha;
     int anoReferencia = anoFicha;
 
-    if (triReferencia == 0) {
-        triReferencia = 4;
-        anoReferencia = anoFicha - 1;
-    }
+//    if (triReferencia == 0) {
+//        triReferencia = 4;
+//        anoReferencia = anoFicha - 1;
+//    }
 
     System.out.println("===== VALIDACAO FICHA 01 =====");
     System.out.println("Ficha Atual: " + trimestreFicha + "/" + anoFicha);

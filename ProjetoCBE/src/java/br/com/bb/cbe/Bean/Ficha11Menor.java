@@ -14,6 +14,7 @@ public class Ficha11Menor {
     private Funcionario funcionario;
     private int trimestre;
     private Status status;
+    private String justificativaGestor;
 
     public Ficha11Menor() {
     }
@@ -97,5 +98,12 @@ public class Ficha11Menor {
     public void setStatus(Status status) {
         this.status = status;
     }
+         
+    public String getJustificativaGestor() {
+    return justificativaGestor;
+    }
 
+public void setJustificativaGestor(String justificativaGestor) {
+    this.justificativaGestor = justificativaGestor;
+    }
 }

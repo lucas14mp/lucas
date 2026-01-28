@@ -247,7 +247,7 @@ public class Ficha01Controller extends HttpServlet {
         System.out.println(">>> TOTAL LOTE (BRL): " + somaTotalConvertidaBrl);
 
         // 4. Valida o Montante Total contra o Banco
-        boolean precisa = Ficha01DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, trimestreAtual, anoAtual);
+        boolean precisa = Ficha01DAO.verificarNecessidadeJustificativa(somaTotalConvertidaBrl, triRef, anoRef);
 
         // 5. Retorna JSON
         resp.setContentType("application/json");
