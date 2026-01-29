@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const perguntasFormMaior = document.getElementById('formMaior');
   const perguntasFormMaiorTeste = document.getElementById('FormCopiaColaMaior');
   const perguntasFormMenorTeste = document.getElementById('FormCopiaColaMenor');
+  const sessaoUploadMenor = document.getElementById('sessaoUploadMenor');
 //identifica quando for clicado maior que 10% ou menor que 10%
   respostaInputs.forEach(input => {
     input.addEventListener('click', function () {
@@ -16,15 +17,18 @@ document.addEventListener("DOMContentLoaded", function () {
 //        perguntasFormMaior.style.display = 'none';
         perguntasFormMaiorTeste.style.display = 'none';
         perguntasFormMenorTeste.style.display = 'block';
+        if(sessaoUploadMenor) sessaoUploadMenor.style.display = 'block';
       } else if (input.value === 'maior-que-10') {
 //        perguntasFormMenor.style.display = 'none';
 //        perguntasFormMaior.style.display = 'block';
         perguntasFormMaiorTeste.style.display = 'block';
         perguntasFormMenorTeste.style.display = 'none';
+        if(sessaoUploadMenor) sessaoUploadMenor.style.display = 'none';
         
       } else {
         perguntasFormMenor.style.display = 'none';
         perguntasFormMaior.style.display = 'none';
+        if(sessaoUploadMenor) sessaoUploadMenor.style.display = 'none';
       }
     });
   });

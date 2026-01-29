@@ -184,9 +184,18 @@ function salvarLoteDefinitivo(justificativa) {
             alert("Ficha 11 Menor enviada com sucesso!");
             window.location.href = "../views/ficha11.jsp?msg=Sucesso";
         },
-        error: function(xhr) {
+        error: function(xhr, status, error) {
             $('body').css('cursor', 'default');
-            alert("Erro ao salvar: " + xhr.status);
+            console.error("Detalhes do erro:", xhr);
+            
+            // AQUI ESTÁ O SEGREDO: xhr.responseText contém a mensagem que você escreveu no Java
+            var mensagemErro = xhr.responseText;
+            
+            if (!mensagemErro) {
+                mensagemErro = "Erro desconhecido ao salvar (Status: " + xhr.status + ")";
+            }
+            
+            alert(mensagemErro); 
         }
     });
 }

@@ -91,7 +91,7 @@
                                     </p>
                                     <img src="../resources/imgs/ficha11menor.png" alt="Tabela base para colar" style="width:750px;height:200px;">
                                     <div style="margin-bottom: 15px;">
-                                        <button id="copiarConteudo11" class="btn-copiar11" onclick="copiarTextoMenor()">Copiar conteúdo</button>
+<!--                                        <button id="copiarConteudo11" class="btn-copiar11" onclick="copiarTextoMenor()">Copiar conteúdo</button>-->
                                     </div>
                                     <br>
                                     <br>
@@ -181,7 +181,7 @@
                                     </div>
                                     <p class="descricao11">Informe o valor de lucro distribuído ao declarante. Deve ser informado apenas o valor do lucro distribuído ao declarante. Este campo deve ser maior que zero.</p>
                                     <br>                          
-                                    <button id="colarNovamente11" class="btn-relatorio-colar11" onclick="colarNovamente()">Colar tabela novamente</button>
+<!--                                    <button id="colarNovamente11" class="btn-relatorio-colar11" onclick="colarNovamente()">Colar tabela novamente</button>
                                     <br><br>
                                     <textarea id="areaInput11Menor" class="area-input11" onpaste="clipMenor(event)" placeholder="Por gentileza, cole as informações aqui."></textarea>                                   
                                     <input type="text" id="tipozada" name="tipo-requisicao" value="createbatch" hidden>
@@ -189,9 +189,10 @@
                                     <input type="text" id="id-header" name="id-header" value="4" hidden>
                                     <div id="controlaMenor">
                                     </div>
-                                    <button id="submitButtonMenor" class="btn-relatorio-enviar11" onclick="sendAllDataMenor()" disabled >Enviar</button>                       
+                                    <button id="submitButtonMenor" class="btn-relatorio-enviar11" onclick="sendAllDataMenor()" disabled >Enviar</button>                       -->
                                 </div>
                         </div>
+                <div id="sessaoUploadMenor" style="display: none;">
                                     
                                     <div class="area-upload">
                     <h3 style="color: #333; margin-bottom: 15px;">Anexar Planilha (.xlsx)</h3>
@@ -252,6 +253,7 @@
         </div>
     </div>
 </div>
+                </div>
 
                                     
                 <!--FIN-->
@@ -486,7 +488,7 @@
                                 <div class="teste" id="teste"></div>
                                     
                 <script src="/ProjetoCBE/resources/js/ficha11.js"></script>
-                <script src="../resources/js/Ficha11Menor.js?v=2"></script>
+                <script src="../resources/js/ficha11Menor.js?v=2"></script>
                 <script src="/ProjetoCBE/resources/js/temas.js"></script>
                 <script>
                     function ordenarTabela1() { 

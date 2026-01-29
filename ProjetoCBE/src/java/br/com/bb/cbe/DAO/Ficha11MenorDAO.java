@@ -42,7 +42,7 @@ public class Ficha11MenorDAO {
 
     }
 //
-public static void createBatch(List<Ficha11Menor> listaFichas) {
+public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLException { // Adicionado throws SQLException
         String sql = "INSERT INTO ficha11_participacao_menor "
                    + "(metodo_valoracao, valor_participacao, lucro_distribuido, data_criacao, trimestre, id_moeda, id_pais, chave, id_status, justificativa_gestor) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -52,7 +52,7 @@ public static void createBatch(List<Ficha11Menor> listaFichas) {
 
         try {
             conn = Conexao.conectar();
-            conn.setAutoCommit(false); // Importante para performance e integridade do lote
+            conn.setAutoCommit(false); // Inicia transação
             pst = conn.prepareStatement(sql);
 
             for (Ficha11Menor ficha : listaFichas) {
@@ -72,15 +72,18 @@ public static void createBatch(List<Ficha11Menor> listaFichas) {
                     pst.setNull(10, java.sql.Types.VARCHAR);
                 }
 
-                pst.addBatch(); // Adiciona ao lote
+                pst.addBatch();
             }
 
-            pst.executeBatch(); // Executa todos de uma vez
-            conn.commit();      // Confirma a transação
+            pst.executeBatch();
+            conn.commit(); // Confirma a gravação
 
         } catch (SQLException e) {
+            // Se der erro, desfaz tudo
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            e.printStackTrace(); 
+            // AQUI ESTÁ A CORREÇÃO: LANÇAR O ERRO PARA CIMA
+            throw new SQLException("Erro ao salvar lote no banco: " + e.getMessage()); 
         } finally {
             Conexao.fecharConexao(conn, pst, null);
         }

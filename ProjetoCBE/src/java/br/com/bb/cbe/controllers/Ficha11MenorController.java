@@ -137,18 +137,26 @@ public class Ficha11MenorController extends HttpServlet {
                     Ficha11MenorDAO.update(ficha);
                     break;
 
-                // --- NOVAS AÇÕES (EXCEL) ---
                 case "validar-lote":
                     // Agora passamos o jsonBodyObject corretamente
                     validarLote(jsonBodyObject, resp);
                     return; // Retorna aqui para não redirecionar no final
 
                 case "salvar-lote":
-                    salvarLote(jsonBodyObject, chaveFuncionario);
-                    resp.setStatus(200);
+                    try {
+                        salvarLote(jsonBodyObject, chaveFuncionario);
+                        resp.setStatus(200);
+                    } catch (Exception e) {
+                        e.printStackTrace(); // Isso joga o erro no log do Glassfish/Tomcat
+
+                        resp.setStatus(500); // Define erro
+                        resp.setContentType("text/plain; charset=UTF-8"); // Define que é texto
+
+                        // Envia a mensagem real do erro para o JavaScript
+                        resp.getWriter().write("Falha ao gravar: " + e.getMessage());
+                    }
                     return;
 
-                // --- AÇÕES LEGADO (MANUAL/BATCH ANTIGO) ---
                 case "validacao": // Validação por Checkbox na tela
                     String[] idsValidadosArray = req.getParameterValues("idsValidados[]");
                     List<String> idsValidadosList = (idsValidadosArray != null) ? Arrays.asList(idsValidadosArray) : new ArrayList<>();
@@ -374,29 +382,34 @@ public class Ficha11MenorController extends HttpServlet {
         resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
     }
 
-    private void salvarLote(JsonObject json, String chaveFuncionario) {
+    private void salvarLote(JsonObject json, String chaveFuncionario) throws Exception {
         JsonArray itens = json.getAsJsonArray("itens");
         String justificativa = "";
         if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
             justificativa = json.get("justificativa").getAsString();
         }
 
-        // Importante: criar lista para batch se o DAO suportar, ou loop simples
         List<Ficha11Menor> listaParaSalvar = new ArrayList<>();
 
         for (JsonElement el : itens) {
             JsonObject item = el.getAsJsonObject();
             Ficha11Menor ficha = new Ficha11Menor();
             
+            // Verifica e converte País
+            if (!item.has("id_pais")) throw new Exception("ID do País não encontrado no item.");
             Pais p = new Pais();
             p.setId(item.get("id_pais").getAsInt());
             ficha.setPais(p);
 
+            // Verifica e converte Moeda
+            if (!item.has("id_moeda")) throw new Exception("ID da Moeda não encontrado no item.");
             Moeda m = new Moeda();
             m.setId(item.get("id_moeda").getAsInt());
             ficha.setMoeda(m);
 
-            ficha.setMetodoValoracao(item.get("metodo").getAsString());
+            ficha.setMetodoValoracao(item.has("metodo") ? item.get("metodo").getAsString() : "");
+            
+            // Tratamento de Double (se vier como string ou number)
             ficha.setValorParticipacao(item.get("valor_participacao").getAsDouble());
             ficha.setLucroDistribuido(item.get("lucro_distribuido").getAsDouble());
             
@@ -411,13 +424,15 @@ public class Ficha11MenorController extends HttpServlet {
             s.setId(1);
             ficha.setStatus(s);
             
-            // Ficha11Menor tem campo de justificativa? Se sim:
-            // ficha.setJustificativaGestor(justificativa);
+            if(!justificativa.isEmpty()) {
+                ficha.setJustificativaGestor(justificativa);
+            }
 
             listaParaSalvar.add(ficha);
         }
         
         if(!listaParaSalvar.isEmpty()){
+            // Agora o DAO vai lançar exceção se falhar, e o Controller vai pegar
             Ficha11MenorDAO.createBatch(listaParaSalvar);
         }
     }
