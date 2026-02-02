@@ -457,6 +457,45 @@
                                                 (monetária) de passivos (obrigações) e ativos (incluindo créditos) que tenham transitado no resultado do exercício.</p>
                                         </c:when>
                                             
+<div id="wrapperMaior" style="display:none;">
+    
+    <div style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; border: 1px solid #b0c4de;">
+        <label for="selectUpe" style="font-weight: bold; color: #003366; font-size: 1.1em; margin-right: 10px;">
+            Pertence à Diretoria UPE?
+        </label>
+        <select id="selectUpe" style="padding: 5px; border-radius: 4px; border: 1px solid #003366; color: #003366; font-weight: bold;">
+            <option value="nao">Não</option>
+            <option value="sim">Sim, pertence à UPE</option>
+        </select>
+    </div>
+
+    <div class="area-upload">
+        <h3 style="color: #333;">Anexar Planilha Maior (>= 10%)</h3>
+        <form id="formUploadExcelMaior" action="${pageContext.request.contextPath}/UploadFicha11MaiorController" method="post" enctype="multipart/form-data">
+            <input type="file" name="arquivoExcel" id="arquivoExcelMaior" accept=".xlsx, .xls" required />
+            <i class="bi bi-x-circle-fill" id="btnRemoverMaior" style="display:none; cursor:pointer;" title="Remover"></i>
+            <br><br>
+            <button type="submit" class="btn">Processar Arquivo</button>
+        </form>
+    </div>
+
+    <hr>
+    <h3 style="color: #003366;">Itens Adicionados (Maior)</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="tabelaItensMaior">
+            <thead>
+                <tr>
+                    <th>Empresa</th><th>Moeda</th><th>Patr. Líquido</th><th>% Cap</th><th>Ativo</th><th>Ação</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="botoes" id="areaBotaoFinalMaior" style="display:none; margin-top: 20px; justify-content: center;">
+        <button type="button" class="btn salvar" id="btnFinalizarLoteMaior">Salvar e Enviar Ficha Maior</button>
+    </div>
+</div>
+                                            
                                     </c:choose>
                                         <br>                          
                                         <button id="colarNovamente11" class="btn-relatorio-colar11" onclick="colarNovamente()">Colar tabela novamente</button>
@@ -490,6 +529,21 @@
                 <script src="/ProjetoCBE/resources/js/ficha11.js"></script>
                 <script src="../resources/js/ficha11Menor.js?v=2"></script>
                 <script src="/ProjetoCBE/resources/js/temas.js"></script>
+                <script src="../resources/js/ficha11Maior.js"></script>
+                <script>
+                        $(document).ready(function() {
+                            // Toggle entre Menor e Maior
+                            $('input[name="resposta-participacao"]').change(function() {
+                                if ($('#danger-outlined').is(':checked')) {
+                                    $('#wrapperMenor').show();
+                                    $('#wrapperMaior').hide();
+                                } else {
+                                    $('#wrapperMenor').hide();
+                                    $('#wrapperMaior').show();
+                                }
+                            });
+                        });
+                </script>
                 <script>
                     function ordenarTabela1() { 
                         var table = document.getElementById("tabela1");

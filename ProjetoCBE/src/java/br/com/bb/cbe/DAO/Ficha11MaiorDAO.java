@@ -18,6 +18,115 @@ import java.util.List;
 import java.util.Optional;
 
 public class Ficha11MaiorDAO {
+    
+    public static void createBatch(List<Ficha11Maior> listaFichas) throws SQLException {
+        // SQL completo com TODAS as colunas da tabela para evitar erros de "Field 'x' doesn't have a default value"
+        String sql = "INSERT INTO ficha11_participacao_maior "
+                   + "(id_empresa, id_moeda, patrimonio_total, participacao_capital_social, porcento_poder_voto, "
+                   + "ativo_database, passivo_exigivel, result_liq_itens_nao_recorrentes, result_liq_reavaliacoes, lucro_distribuido, "
+                   + "controla_empresas, diretoria, data_criacao, trimestre, chave, id_status, justificativa_gestor, "
+                   + "possui_cotacao_em_bolsa, metodo_valoracao, valor_empresa, valor_total_lucro_preju_liquido, result_liq_variacao_cambial) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        Connection conn = null;
+        PreparedStatement pst = null;
+
+        try {
+            conn = Conexao.conectar();
+            conn.setAutoCommit(false); // Inicia transação
+            pst = conn.prepareStatement(sql);
+
+            for (Ficha11Maior ficha : listaFichas) {
+                // 1. ID Empresa
+                pst.setInt(1, ficha.getEmpresa().getId());
+                
+                // 2. ID Moeda
+                pst.setInt(2, ficha.getMoeda().getId());
+                
+                // 3. Patrimônio Total (Do Excel)
+                pst.setDouble(3, ficha.getPatrimonioTotal());
+                
+                // 4. Participação Capital (Do Excel)
+                pst.setDouble(4, ficha.getPorcentoParticipacaoCapital());
+                
+                // 5. Porcento Poder Voto (Do Excel)
+                pst.setDouble(5, ficha.getPorcentoPoderVoto());
+                
+                // 6. Ativo Data-base (Do Excel)
+                pst.setDouble(6, ficha.getAtivoDatabase());
+                
+                // 7. Passivo Exigível (Do Excel)
+                pst.setDouble(7, ficha.getPassivoExigivel());
+                
+                // 8. Result Liq Itens Não Recorrentes (Do Excel)
+                pst.setDouble(8, ficha.getResultadoLiquidoItensNaoRecorrentes());
+                
+                // 9. Result Liq Reavaliações (Do Excel)
+                pst.setDouble(9, ficha.getResultadoLiquidoReavaliacoes());
+                
+                // 10. Lucro Distribuído (Do Excel)
+                pst.setDouble(10, ficha.getLucroDistribuido());
+                
+                // 11. Controla Empresas (Do Excel)
+                pst.setBoolean(11, ficha.isControlaEmpresa()); 
+                
+                // 12. Diretoria / UPE (Do Select na tela)
+                if (ficha.getDiretoria() != null && !ficha.getDiretoria().isEmpty()) {
+                    pst.setString(12, ficha.getDiretoria());
+                } else {
+                    pst.setNull(12, java.sql.Types.VARCHAR);
+                }
+                
+                // 13. Data Criação
+                pst.setDate(13, new java.sql.Date(ficha.getDataCriacao().getTime()));
+                
+                // 14. Trimestre
+                pst.setInt(14, ficha.getTrimestre());
+                
+                // 15. Chave Funcionário
+                pst.setString(15, ficha.getFuncionario().getChave());
+                
+                // 16. ID Status
+                pst.setInt(16, ficha.getStatus().getId());
+                
+                // 17. Justificativa
+                if (ficha.getJustificativaGestor() != null && !ficha.getJustificativaGestor().isEmpty()) {
+                    pst.setString(17, ficha.getJustificativaGestor());
+                } else {
+                    pst.setNull(17, java.sql.Types.VARCHAR);
+                }
+
+                // --- CAMPOS NÃO PREENCHIDOS PELO EXCEL (DEFINIR PADRÃO) ---
+                
+                // 18. Possui Cotação (Padrão: False)
+                pst.setBoolean(18, false); 
+                
+                // 19. Método Valoração (Padrão: "Não Informado")
+                pst.setString(19, "Não Informado via Excel"); 
+                
+                // 20. Valor Empresa (Padrão: 0.0)
+                pst.setDouble(20, 0.0);
+                
+                // 21. Valor Total Lucro/Prejuízo Líquido (Padrão: 0.0)
+                pst.setDouble(21, 0.0);
+                
+                // 22. Resultado Liq Variação Cambial (Padrão: 0.0)
+                pst.setDouble(22, 0.0);
+
+                pst.addBatch();
+            }
+
+            pst.executeBatch();
+            conn.commit();
+
+        } catch (SQLException e) {
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
+            throw new SQLException("Erro ao salvar lote Maior 10%: " + e.getMessage());
+        } finally {
+            Conexao.fecharConexao(conn, pst, null);
+        }
+    }
 
     public static void createBatchCoger(List<Ficha11Maior> fichas) {
         System.out.println("ENTROU NO CREATE");
@@ -690,4 +799,10 @@ public class Ficha11MaiorDAO {
         }
     }
     
+    public static boolean verificarNecessidadeJustificativa(double valorConvertido, int trimestre, int ano) {
+        // Lógica similar à Ficha 16/11 Menor. 
+        // Normalmente para Ficha 11 Maior (Dependências), compara-se com as contas de Investimento (11.2, 11.3)
+        // Se precisar de lógica específica por COSIF, ajuste aqui.
+        return false; // Por padrão falso, implemente a query do consolidado se necessário.
+    }
 }

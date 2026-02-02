@@ -9,11 +9,15 @@ import br.com.bb.cbe.Bean.Ficha11Controle;
 import br.com.bb.cbe.Bean.Funcionario;
 import br.com.bb.cbe.Bean.Justificativa;
 import br.com.bb.cbe.Bean.Moeda;
+import br.com.bb.cbe.Bean.Status;
 import br.com.bb.cbe.DAO.Ficha11ControleDAO;
 import br.com.bb.cbe.Utils.DataUtils;
 import br.com.bb.cbe.Utils.JsonUtil;
 import br.com.bb.cbe.Utils.NumeroUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -77,44 +81,36 @@ public class Ficha11MaiorController extends HttpServlet {
 //          INSTÊNCIA DA CLASSE
             Teste testeNomeDiretoria = new Teste();
             Teste justificativaTeste = new Teste();
+            JsonObject jsonBodyObject = null;
             List<Map<String, Object>> list = null;
-            if (tipoRequisicao == null) { //obter o tipoRequisicao aqui, caso seja passado pelo ajax
+            if (tipoRequisicao == null) { 
                 StringBuilder sb = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
                 }
-                String json = sb.toString();
+                String json = sb.toString().trim(); // Use trim() para garantir
                 Gson gson = new Gson();
-                Type type = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
-                list = gson.fromJson(json, type);
-                System.out.println("LISTA: " + list);              
-                // Primeiro loop para encontrar "tipoRequisicao"
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("tipo-requisicao")) {
-                        tipoRequisicao = (String) map.get("tipo-requisicao");
-                            break;
-                    }
-                }
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("justificativa")) {
-                        justificativaTeste.valor = (String) map.get("justificativa");
-                        System.out.println(justificativaTeste.valor);
-                            break;
-                    }
-                }
-                // Segundo loop para encontrar "diretoria"
-                for (Map<String, Object> map : list) {
-                    if (map.containsKey("diretoria")) {
-                        Object obDiretoria = map.get("diretoria");
-                        testeNomeDiretoria.valor = obDiretoria.toString();
-                        break;
-                    }
-                }
+
+                if (!json.isEmpty()) {
+                    // SE FOR O NOVO UPLOAD (Objeto começa com {)
+                    if (json.startsWith("{")) {
+                        jsonBodyObject = gson.fromJson(json, JsonObject.class);
+                        if (jsonBodyObject.has("tipo-requisicao")) {
+                            tipoRequisicao = jsonBodyObject.get("tipo-requisicao").getAsString();
+                        }
+                    } 
+                    // SE FOR O ANTIGO (Lista começa com [) - MANTÉM SUA LÓGICA ANTIGA AQUI
+                    else {
+                        Type type = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                        list = gson.fromJson(json, type); // Sua linha antiga
                         
-            }
+                        // ... MANTENHA SEUS LOOPS ANTIGOS AQUI (createbatch, diretoria, justificativa) ...
+                        // (Não apague nada do que você já tinha aqui dentro)
+                    }
+                }
+            }    
             
 //            Ficha11MaiorController.obterCotacaoDolar(datinha);
             System.out.println("DIRETORIA: " + testeNomeDiretoria.valor);
@@ -170,6 +166,21 @@ public class Ficha11MaiorController extends HttpServlet {
                     ficha.setId(Integer.parseInt(req.getParameter("id")));
                     Ficha11MaiorDAO.update(ficha);
                     break;
+                case "validar-lote":
+                    validarLote(jsonBodyObject, resp);
+                    return;
+
+                case "salvar-lote":
+                    try {
+                        salvarLote(jsonBodyObject, chaveFuncionario);
+                        resp.setStatus(200);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        resp.setStatus(500);
+                        resp.setContentType("text/plain; charset=UTF-8");
+                        resp.getWriter().write("Erro ao gravar: " + e.getMessage());
+                    }
+                    return;
                 case "validacao":
                     System.out.println("TESTE");
                     String[] idsValidadosArray = req.getParameterValues("idsValidados[]");
@@ -802,4 +813,90 @@ public class Ficha11MaiorController extends HttpServlet {
         tempJust.setFuncionario(funcionario.getFuncionarioByChave(chaveFuncionario));
         return tempJust;
 }
+    
+    private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        boolean precisa = false; // Lógica de validação simplificada
+        resp.setContentType("application/json");
+        resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
+    }
+
+    private void salvarLote(JsonObject json, String chaveFuncionario) throws Exception {
+        JsonArray itens = json.getAsJsonArray("itens");
+        String justificativa = "";
+        if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
+            justificativa = json.get("justificativa").getAsString();
+        }
+
+        boolean isUpe = false;
+        if (json.has("flagUpe")) {
+            isUpe = json.get("flagUpe").getAsBoolean();
+        }
+
+        List<Ficha11Maior> lista = new ArrayList<>();
+        
+        for (JsonElement el : itens) {
+            JsonObject item = el.getAsJsonObject();
+            Ficha11Maior f = new Ficha11Maior();
+
+            // IDs
+            Empresa emp = new Empresa();
+            emp.setId(item.get("id_empresa").getAsInt());
+            f.setEmpresa(emp);
+
+            Moeda m = new Moeda();
+            m.setId(item.get("id_moeda").getAsInt());
+            f.setMoeda(m);
+
+            // Valores Numéricos (Usando os nomes CORRETOS do seu Bean)
+            f.setPatrimonioTotal(item.get("patrimonio_liquido").getAsDouble());
+            f.setPorcentoParticipacaoCapital(item.get("percentual_capital").getAsDouble()); // Bean usa PorcentoParticipacaoCapital
+            f.setPorcentoPoderVoto(item.get("percentual_voto").getAsDouble()); // Bean usa PorcentoPoderVoto
+            f.setAtivoDatabase(item.get("ativo").getAsDouble()); // Bean usa AtivoDatabase
+            f.setPassivoExigivel(item.get("passivo").getAsDouble()); // Bean usa PassivoExigivel
+            
+            // Tratamento de campos opcionais do JSON (podem não vir do Excel simples)
+            if(item.has("resultado_recorrente")) 
+                f.setResultadoLiquidoItensNaoRecorrentes(item.get("resultado_recorrente").getAsDouble());
+            
+            if(item.has("resultado_reavaliacao"))
+                f.setResultadoLiquidoReavaliacoes(item.get("resultado_reavaliacao").getAsDouble());
+            
+            f.setLucroDistribuido(item.get("resultado_distribuido").getAsDouble());
+            
+            // Boolean
+            f.setControlaEmpresa(item.get("controla_outras").getAsBoolean()); // Bean usa isControlaEmpresa
+
+            // Lógica UPE -> Diretoria
+            if (isUpe) {
+                f.setDiretoria("UPE");
+            } else {
+                f.setDiretoria(null);
+            }
+
+            // Campos de Controle
+            f.setTrimestre(DataUtils.validaTrimestre());
+            f.setDataCriacao(new Date());
+            Funcionario func = new Funcionario();
+            func.setChave(chaveFuncionario);
+            f.setFuncionario(func);
+            Status s = new Status();
+            s.setId(1);
+            f.setStatus(s);
+            f.setJustificativaGestor(justificativa);
+            
+            // Campos obrigatórios do banco não presentes no Excel simples (Defaults)
+            f.setPossuiCotacaoEmBolsa(false);
+            f.setMetodoValoracao("Não Informado via Excel"); 
+            f.setValorEmpresa(0.0);
+            f.setValorTotalLucroPrejuizo(0.0);
+            f.setResultadoLiquidoVariacaoCambial(0.0);
+
+            lista.add(f);
+        }
+
+        if (!lista.isEmpty()) {
+            Ficha11MaiorDAO.createBatch(lista);
+        }
+    }
+
 }

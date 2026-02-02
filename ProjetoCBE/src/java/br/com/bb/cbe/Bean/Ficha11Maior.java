@@ -25,6 +25,8 @@ public class Ficha11Maior {
     private Empresa empresa;
     private Funcionario funcionario;
     private Status status;
+    private String diretoria;
+    private String justificativaGestor;
 
     public Ficha11Maior() {
 
@@ -197,4 +199,11 @@ public class Ficha11Maior {
     public void setStatus(Status status) {
         this.status = status;
     }
+    
+    public String getDiretoria() { return diretoria; }
+    public void setDiretoria(String diretoria) { this.diretoria = diretoria; }
+    
+    public String getJustificativaGestor() { return justificativaGestor; }
+    public void setJustificativaGestor(String justificativaGestor) { this.justificativaGestor = justificativaGestor; }
+    
 }
