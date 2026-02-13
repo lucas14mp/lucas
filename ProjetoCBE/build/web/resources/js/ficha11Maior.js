@@ -3,10 +3,13 @@ var listaItensMaior = [];
 $(document).ready(function() {
     console.log(">>> Ficha 11 Maior JS Iniciado");
 
-    // 1. Controle Visual do Input
+    // --- 1. CONTROLE VISUAL DO INPUT DE ARQUIVO ---
     $(document).on('change', '#arquivoExcelMaior', function() {
-        if ($(this).val()) $('#btnRemoverMaior').show();
-        else $('#btnRemoverMaior').hide();
+        if ($(this).val()) {
+            $('#btnRemoverMaior').show();
+        } else {
+            $('#btnRemoverMaior').hide();
+        }
     });
 
     $(document).on('click', '#btnRemoverMaior', function() {
@@ -14,21 +17,36 @@ $(document).ready(function() {
         $(this).hide();
     });
 
-    // 2. Upload AJAX
+    // --- 2. UPLOAD DO EXCEL MAIOR (Processamento de Leitura) ---
     $(document).on('submit', '#formUploadExcelMaior', function(e) {
-        e.preventDefault();
+        e.preventDefault(); 
         
-        var input = $('#arquivoExcelMaior');
-        if (!input.val()) { alert('Selecione um arquivo.'); return; }
+        // NOTA: A validação da UPE foi removida daqui conforme solicitado.
+        // Ela ocorrerá apenas no botão "Salvar e Enviar".
 
+        // Validação do Arquivo
+        var inputArquivo = $('#arquivoExcelMaior');
+        var nomeArquivo = inputArquivo.val();
+
+        if (!nomeArquivo) {
+            alert('Por favor, selecione um arquivo.');
+            return;
+        }
+        if (!nomeArquivo.toLowerCase().endsWith('.xlsx') && !nomeArquivo.toLowerCase().endsWith('.xls')) {
+            alert('Por favor, selecione um arquivo Excel válido (.xlsx ou .xls).');
+            return;
+        }
+
+        // Envio AJAX para ler o Excel
         var formData = new FormData(this);
-        var btn = $(this).find('button[type="submit"]');
-        
-        btn.prop('disabled', true).text('Enviando...');
+        var btnUpload = $(this).find('button[type="submit"]');
+        var actionUrl = $(this).attr('action'); 
+
+        btnUpload.prop('disabled', true).text('Processando...');
         $('body').css('cursor', 'wait');
 
         $.ajax({
-            url: $(this).attr('action'),
+            url: actionUrl, 
             type: 'POST',
             data: formData,
             cache: false,
@@ -37,74 +55,135 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 $('body').css('cursor', 'default');
-                btn.prop('disabled', false).html('<i class="bi bi-cloud-upload"></i> Processar');
+                btnUpload.prop('disabled', false).html('<i class="bi bi-cloud-upload"></i> Processar Arquivo');
                 
                 if (response.erro) {
-                    alert("Erro: " + response.erro);
-                } else {
-                    response.forEach(function(item) { listaItensMaior.push(item); });
+                    alert("Erro no upload: " + response.erro);
+                } else if (Array.isArray(response)) {
+                    // Adiciona os novos itens à lista existente
+                    response.forEach(function(item) {
+                        listaItensMaior.push(item);
+                    });
                     atualizarTabelaMaior();
-                    alert("Sucesso! Verifique a tabela.");
-                    input.val('');
+                    alert("Leitura concluída! " + response.length + " registros carregados na tabela.");
+                    
+                    // Limpa o input após sucesso
+                    inputArquivo.val('');
                     $('#btnRemoverMaior').hide();
+                } else {
+                    alert("Erro: Resposta inválida do servidor.");
                 }
             },
             error: function(xhr) {
                 $('body').css('cursor', 'default');
-                btn.prop('disabled', false);
-                alert("Erro ao processar arquivo.");
+                btnUpload.prop('disabled', false).html('<i class="bi bi-cloud-upload"></i> Processar Arquivo');
+                console.error("Erro Upload Maior:", xhr);
+                alert("Erro ao processar arquivo. Verifique o console para detalhes.");
             }
         });
     });
 
-    // 3. Salvar Lote
+    // --- 3. SALVAR E ENVIAR O LOTE FINAL (Gravação no Banco) ---
     $('#btnFinalizarLoteMaior').click(function(e) {
         e.preventDefault();
-        if (listaItensMaior.length === 0) { alert("Lista vazia."); return; }
         
-        var isUpe = $('#selectUpe').val() === 'sim';
+        if (listaItensMaior.length === 0) {
+            alert("A lista está vazia. Faça o upload de uma planilha primeiro.");
+            return;
+        }
+        
+        // --- VALIDAÇÃO DA UPE (AGORA É AQUI) ---
+        var selectUpe = $('#selectUpe').val();
+        if (!selectUpe) {
+            alert('Por favor, selecione acima se pertence à Diretoria UPE antes de salvar.');
+            $('#selectUpe').focus(); // Foca no campo para o usuário ver
+            return; // Impede o envio
+        }
+        // ---------------------------------------
+        
+        var isUpe = (selectUpe === 'sim');
         
         $('body').css('cursor', 'wait');
+
         $.ajax({
             type: "POST",
-            url: "../ficha11/maior", // Ajuste se seu servlet mapear diferente
+            url: "../ficha11/maior", 
             data: JSON.stringify({
                 "tipo-requisicao": "salvar-lote",
                 "itens": listaItensMaior,
                 "flagUpe": isUpe
             }),
             contentType: "application/json",
-            success: function() {
+            success: function(response) {
                 $('body').css('cursor', 'default');
-                alert("Ficha 11 Maior salva com sucesso!");
-                window.location.reload();
+                alert("Ficha 11 Maior enviada com sucesso!");
+                window.location.href = "../views/ficha11.jsp?msg=SucessoMaior";
             },
             error: function(xhr) {
                 $('body').css('cursor', 'default');
-                alert("Erro ao salvar: " + xhr.responseText);
+                var msg = xhr.responseText || "Erro desconhecido";
+                console.error(xhr);
+                alert("Erro ao salvar: " + msg);
             }
         });
     });
 });
 
+// --- FUNÇÕES AUXILIARES ---
+
 function atualizarTabelaMaior() {
     var tbody = $('#tabelaItensMaior tbody');
     tbody.empty();
+    
+    // Função auxiliar para formatar números (R$)
+    function f(val) {
+        return parseFloat(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    
+    // Função auxiliar para formatar booleanos (SIM/NÃO)
+    function b(val) {
+        if (typeof val === 'string') return val.toUpperCase();
+        return (val === true || val === 1) ? "SIM" : "NÃO";
+    }
+
     listaItensMaior.forEach(function(item, index) {
         var tr = `<tr>
-            <td>${item.nome_empresa}</td>
-            <td>${item.nome_moeda}</td>
-            <td>${item.patrimonio_liquido}</td>
-            <td>${item.percentual_capital}%</td>
-            <td>${item.ativo}</td>
-            <td style="text-align:center;"><span onclick="removerItemMaior(${index})" style="cursor:pointer;color:red;">X</span></td>
+            <td style="text-align: left; white-space: nowrap;">${item.nome_empresa || ''}</td>
+            <td>${b(item.possui_cotacao_em_bolsa)}</td>
+            <td>${item.nome_moeda || ''}</td>
+            <td style="white-space: nowrap;">${item.metodo_valoracao || ''}</td>
+            <td>${b(item.controla_empresas)}</td>
+            <td>${f(item.valor_empresa)}</td>
+            <td>${f(item.patrimonio_total)}</td>
+            <td>${f(item.participacao_capital_social)}%</td>
+            <td>${f(item.porcento_poder_voto)}%</td>
+            <td>${f(item.ativo_database)}</td>
+            <td>${f(item.passivo_exigivel)}</td>
+            <td>${f(item.valor_total_lucro_preju_liquido)}</td>
+            <td>${f(item.result_liq_itens_nao_recorrentes)}</td>
+            <td>${f(item.result_liq_reavaliacoes)}</td>
+            <td>${f(item.result_liq_variacao_cambial)}</td>
+            <td>${f(item.lucro_distribuido)}</td>
+            
+            <td style="text-align:center; position: sticky; right: 0; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                <span onclick="removerItemMaior(${index})" style="cursor:pointer; color:red; font-weight:bold; font-size: 1.2em;" title="Remover item">X</span>
+            </td>
         </tr>`;
         tbody.append(tr);
     });
-    if(listaItensMaior.length > 0) $('#areaBotaoFinalMaior').show();
+
+    if (listaItensMaior.length > 0) {
+        $('#areaBotaoFinalMaior').show();
+        // Ajusta overflow para permitir rolagem horizontal
+        $('#tabelaItensMaior').parent().css('overflow-x', 'auto');
+    } else {
+        $('#areaBotaoFinalMaior').hide();
+    }
 }
 
 function removerItemMaior(index) {
-    listaItensMaior.splice(index, 1);
-    atualizarTabelaMaior();
+    if(confirm("Deseja realmente remover este item da lista?")) {
+        listaItensMaior.splice(index, 1);
+        atualizarTabelaMaior();
+    }
 }

@@ -814,13 +814,13 @@ public class Ficha11MaiorController extends HttpServlet {
         return tempJust;
 }
     
-    private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
-        boolean precisa = false; // Lógica de validação simplificada
+private void validarLote(JsonObject json, HttpServletResponse resp) throws IOException {
+        boolean precisa = false; // Lógica de validação pode ser expandida aqui
         resp.setContentType("application/json");
         resp.getWriter().write("{\"precisaJustificar\": " + precisa + "}");
     }
 
-    private void salvarLote(JsonObject json, String chaveFuncionario) throws Exception {
+private void salvarLote(JsonObject json, String chaveFuncionario) throws Exception {
         JsonArray itens = json.getAsJsonArray("itens");
         String justificativa = "";
         if (json.has("justificativa") && !json.get("justificativa").isJsonNull()) {
@@ -833,12 +833,12 @@ public class Ficha11MaiorController extends HttpServlet {
         }
 
         List<Ficha11Maior> lista = new ArrayList<>();
-        
+
         for (JsonElement el : itens) {
             JsonObject item = el.getAsJsonObject();
             Ficha11Maior f = new Ficha11Maior();
 
-            // IDs
+            // IDs e FKs
             Empresa emp = new Empresa();
             emp.setId(item.get("id_empresa").getAsInt());
             f.setEmpresa(emp);
@@ -847,49 +847,35 @@ public class Ficha11MaiorController extends HttpServlet {
             m.setId(item.get("id_moeda").getAsInt());
             f.setMoeda(m);
 
-            // Valores Numéricos (Usando os nomes CORRETOS do seu Bean)
-            f.setPatrimonioTotal(item.get("patrimonio_liquido").getAsDouble());
-            f.setPorcentoParticipacaoCapital(item.get("percentual_capital").getAsDouble()); // Bean usa PorcentoParticipacaoCapital
-            f.setPorcentoPoderVoto(item.get("percentual_voto").getAsDouble()); // Bean usa PorcentoPoderVoto
-            f.setAtivoDatabase(item.get("ativo").getAsDouble()); // Bean usa AtivoDatabase
-            f.setPassivoExigivel(item.get("passivo").getAsDouble()); // Bean usa PassivoExigivel
+            // Mapeamento com as chaves exatas do banco/JSON
+            f.setPossuiCotacaoEmBolsa(item.get("possui_cotacao_em_bolsa").getAsBoolean());
+            f.setMetodoValoracao(item.get("metodo_valoracao").getAsString());
+            f.setControlaEmpresa(item.get("controla_empresas").getAsBoolean());
             
-            // Tratamento de campos opcionais do JSON (podem não vir do Excel simples)
-            if(item.has("resultado_recorrente")) 
-                f.setResultadoLiquidoItensNaoRecorrentes(item.get("resultado_recorrente").getAsDouble());
-            
-            if(item.has("resultado_reavaliacao"))
-                f.setResultadoLiquidoReavaliacoes(item.get("resultado_reavaliacao").getAsDouble());
-            
-            f.setLucroDistribuido(item.get("resultado_distribuido").getAsDouble());
-            
-            // Boolean
-            f.setControlaEmpresa(item.get("controla_outras").getAsBoolean()); // Bean usa isControlaEmpresa
+            f.setValorEmpresa(item.get("valor_empresa").getAsDouble());
+            f.setPatrimonioTotal(item.get("patrimonio_total").getAsDouble());
+            f.setPorcentoParticipacaoCapital(item.get("participacao_capital_social").getAsDouble());
+            f.setPorcentoPoderVoto(item.get("porcento_poder_voto").getAsDouble());
+            f.setAtivoDatabase(item.get("ativo_database").getAsDouble());
+            f.setPassivoExigivel(item.get("passivo_exigivel").getAsDouble());
+            f.setValorTotalLucroPrejuizo(item.get("valor_total_lucro_preju_liquido").getAsDouble());
+            f.setResultadoLiquidoItensNaoRecorrentes(item.get("result_liq_itens_nao_recorrentes").getAsDouble());
+            f.setResultadoLiquidoReavaliacoes(item.get("result_liq_reavaliacoes").getAsDouble());
+            f.setResultadoLiquidoVariacaoCambial(item.get("result_liq_variacao_cambial").getAsDouble());
+            f.setLucroDistribuido(item.get("lucro_distribuido").getAsDouble());
 
             // Lógica UPE -> Diretoria
-            if (isUpe) {
-                f.setDiretoria("UPE");
-            } else {
-                f.setDiretoria(null);
-            }
+            if (isUpe) { f.setDiretoria("UPE"); } else { f.setDiretoria(null); }
 
             // Campos de Controle
             f.setTrimestre(DataUtils.validaTrimestre());
-            f.setDataCriacao(new Date());
+            f.setDataCriacao(new java.util.Date());
             Funcionario func = new Funcionario();
             func.setChave(chaveFuncionario);
             f.setFuncionario(func);
-            Status s = new Status();
-            s.setId(1);
+            Status s = new Status(); s.setId(1);
             f.setStatus(s);
             f.setJustificativaGestor(justificativa);
-            
-            // Campos obrigatórios do banco não presentes no Excel simples (Defaults)
-            f.setPossuiCotacaoEmBolsa(false);
-            f.setMetodoValoracao("Não Informado via Excel"); 
-            f.setValorEmpresa(0.0);
-            f.setValorTotalLucroPrejuizo(0.0);
-            f.setResultadoLiquidoVariacaoCambial(0.0);
 
             lista.add(f);
         }
@@ -898,5 +884,4 @@ public class Ficha11MaiorController extends HttpServlet {
             Ficha11MaiorDAO.createBatch(lista);
         }
     }
-
 }
