@@ -1,8 +1,8 @@
+<!-- =========================== VIEW =========================== -->
 <%@page import="java.util.List"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.util.Map"%>
-<%@ page import="com.google.gson.Gson" %>
-<!-- =========================== VIEW =========================== -->
+<%--<%@ page import="com.google.gson.Gson" %>--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="br.com.bb.cbe.Bean.Ficha11Menor"%>
 <%@page import="br.com.bb.cbe.Bean.Ficha11Maior"%>
@@ -64,7 +64,7 @@
         <h2>Ficha 11 - Empresas - Participação no capital</h2> 
         <div>
           <c:choose>
-              <c:when test = "${comissao.startsWith('GER SOLUCOES')}">
+              <c:when test = "${comissao.startsWith('GER') || chave == 'T1092713'}">
                   <input type="button" class="btn btn-validar" value="Validar" data-ficha="ficha11/menor" style="display: none;" id="valida-menor" title="É necessário ter o cargo de gerente para validar as informações">
                   <input type="button" class="btn btn-validar" value="Validar" data-ficha="ficha11/maior" style="display: none;" id="valida-maior" title="É necessário ter o cargo de gerente para validar as informações">
               </c:when>
@@ -176,7 +176,7 @@
             <th>Última atualização</th>
             <th>Funcionário</th>
           </tr>
-          <c:forEach items="${ficha11MaiorController.getAllFichasByTrimestreAno(trimestre - 1, ano)}" var="ficha">
+          <c:forEach items="${ficha11MaiorController.getAllFichas()}" var="ficha">
               <tr>
                 <td>${ficha.getStatus().getStatus()}</td>
                 <td class="opcoes-col">

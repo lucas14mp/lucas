@@ -315,6 +315,8 @@ public class Ficha11MaiorController extends HttpServlet {
     }
 
     public List<Ficha11Maior> getAllFichasByTrimestreAno(int trimestre, int ano) {
+        System.out.println("getAllFichasByTrimestreAno " + trimestre + ano);
+                
         return Ficha11MaiorDAO.getAllFichasByTrimestreAno(trimestre, ano);
     }
 

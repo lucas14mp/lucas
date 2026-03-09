@@ -137,6 +137,7 @@
                     <th>Prazo original do título de dívida</th>
                     <th>Valor de mercado</th>
                     <th>Juros recebidos</th>
+                    <th>Justificativa</th>
                     <th>Última atualização</th>
                     <th>Funcionário</th>
                 </tr>
@@ -170,6 +171,16 @@
                         <td>${ficha.getPrazoDivida()}</td>
                         <td>${ficha.getMoeda().getSimbolo()} ${numeroUtils.doubleToString(ficha.getValorMercado())}</td>
                         <td>${ficha.getMoeda().getSimbolo()} ${numeroUtils.doubleToString(ficha.getJurosRecebidos())}</td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <c:choose>
+                                <c:when test="${not empty ficha.justificativaGestor}">
+                                    <img src="${pageContext.request.contextPath}/resources/imgs/justificativa.png" 
+                                         style="cursor: pointer; width: 24px;"
+                                         onclick="verJustificativaApenas('${ficha.justificativaGestor}')">
+                                </c:when>
+                                <c:otherwise>-</c:otherwise>
+                            </c:choose>
+                        </td>
                         <td>${dataUtils.formatarData(ficha.getDataCriacao())}</td>
                         <td>
                             ${ficha.getFuncionario().getNome()}
@@ -190,9 +201,44 @@
                 </div>
             </div>
         </div>
+                <div id="modalVisualizarJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">
+            <div style="background-color:#fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding:25px; border:1px solid #888; width:50%; border-radius:8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align:center; font-family: Arial, sans-serif;">
+                <h2 style="color: #003366; margin-bottom: 15px;">Justificativa do Gestor</h2>
+                <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+                <p id="conteudoJustificativaTexto" style="font-size: 16px; color: #333; margin-bottom: 30px; text-align: justify; line-height: 1.5; background: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee; max-height: 300px; overflow-y: auto;">
+                </p>
+
+                <div style="display: flex; justify-content: center; gap: 10px;">
+                    <button type="button" onclick="fecharModalJustificativa()" class="btn">Fechar</button>
+                </div>
+            </div>
+        </div>       
         <script src="/ProjetoCBE/resources/js/CalcularDiferenca.js"></script>
         <script src="/ProjetoCBE/resources/js/validacao.js"></script>
         <script src="/ProjetoCBE/resources/js/delecao.js"></script>
-        <script src="/ProjetoCBE/resources/js/temas.js"></script>    
+        <script src="/ProjetoCBE/resources/js/temas.js"></script>
+                <script> function verJustificativaApenas(textoJustificativa) {
+                    var modal = document.getElementById('modalVisualizarJustificativa');
+                    var containerTexto = document.getElementById('conteudoJustificativaTexto');
+
+                    if (modal && containerTexto) {
+                        containerTexto.innerText = textoJustificativa;
+                        modal.style.display = 'block';
+                    }
+                }
+
+                function fecharModalJustificativa() {
+                    document.getElementById('modalVisualizarJustificativa').style.display = 'none';
+                }
+
+                // Fechar ao clicar fora do modal
+                window.onclick = function(event) {
+                    var modal = document.getElementById('modalVisualizarJustificativa');
+                    if (event.target == modal) {
+                        fecharModalJustificativa();
+                    }
+                }
+        </script>
     </body>
 </html>

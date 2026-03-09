@@ -132,6 +132,7 @@ public class Ficha08DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -212,6 +213,7 @@ public class Ficha08DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -255,6 +257,7 @@ public class Ficha08DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -448,6 +451,7 @@ public class Ficha08DAO {
     
     public static double getSomaPorDependencia(int trimestreRef, int anoRef, Integer idDependencia) {
         double totalBrl = 0.0;
+        double totalRend = 0.0;
         
         // 1. Lógica do Trimestre da Ficha (T+1 em relação ao Contábil)
         int triBusca = trimestreRef + 1;
@@ -460,7 +464,7 @@ public class Ficha08DAO {
 
         // 2. SQL
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT f.saldo_database, f.id_moeda ");
+        sql.append("SELECT f.saldo_database, f.rendimentos, f.id_moeda ");
         sql.append("FROM ficha08 f ");
         sql.append("INNER JOIN funcionario func ON f.chave = func.chave ");
         sql.append("WHERE f.trimestre = ? ");
@@ -486,12 +490,20 @@ public class Ficha08DAO {
             
             while (rs.next()) {
                 double saldo = rs.getDouble("saldo_database");
+                double rendimentos = rs.getDouble("rendimentos");
                 int idMoeda = rs.getInt("id_moeda");
                 
                 // 3. Conversão PTAX (Usa o Trimestre de REFERÊNCIA contábil)
                 double taxa = PtaxDAO.getTaxaCompra(idMoeda, trimestreRef, anoRef);
                 
-                totalBrl += (saldo * taxa);
+                totalRend = (rendimentos * taxa);
+                
+    System.out.printf(
+        "Moeda=%d | Taxa=%.6f | Rendimentos(orig)=%.2f -> Rendimentos(BRL)=%.2f%n",
+        idMoeda, taxa, rendimentos, totalRend
+    );
+
+                totalBrl += ((saldo + totalRend) * taxa);
             }
 
         } catch (SQLException e) {

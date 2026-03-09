@@ -20,18 +20,11 @@
                         
                         <button class="btn-exibicao-fichas equipe">Fichas da equipe</button>
                     </div>
-                   <c:choose>
+                    <c:choose>
                         <c:when test = "${uor_equipe == '284307' || uor_equipe == '284308'}">
                             <div>
                                 <a href="filtroPtax.jsp" class="btn" style="margin-left: 270px">PTAX</a>
                             </div>
-                        </c:when>
-                    </c:choose>
-                    <c:choose>
-                        <c:when test = "${uor_equipe == '284307' || uor_equipe == '284308'}">
-<!--                            <div >
-                                <a href="views/taxas.jsp" class="btn" style="margin-left: 10px">TAXAS</a>
-                            </div>-->
                             <div >
                                 <a href="filtro4010Conciliacao.jsp" class="btn" style="margin-left: 10px">Conciliação</a>
                             </div>

@@ -38,7 +38,7 @@ public class Ficha03DAO {
     }
 
     public static void update(Ficha03 ficha) {
-        String sql = "UPDATE ficha03 SET valor_database = ?,  id_moeda = ?, chave = ?, data_criacao = ? WHERE id = ?";
+        String sql = "UPDATE ficha03 SET valor_database = ?,  id_moeda = ?, chave = ?, data_criacao = ?, justificativa_gestor = ? WHERE id = ?";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -49,6 +49,7 @@ public class Ficha03DAO {
             pst.setString(3, ficha.getFuncionario().getChave());
             pst.setDate(4, new java.sql.Date(ficha.getDataCriacao().getTime()));
             pst.setInt(5, ficha.getId());
+            pst.setString(6, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -96,6 +97,7 @@ public class Ficha03DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -170,6 +172,7 @@ public class Ficha03DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {
@@ -272,6 +275,7 @@ public class Ficha03DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -315,6 +319,7 @@ public class Ficha03DAO {
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -338,10 +343,6 @@ public class Ficha03DAO {
             triReferencia = 4;
             anoReferencia = anoFicha - 1;
         }
-        
-    System.out.println("===== VALIDACAO FICHA 03 =====");
-    System.out.println("Ficha Atual: " + trimestreFicha + "/" + anoFicha);
-    System.out.println("Busca no Banco (Referencia): Tri " + triReferencia + "/" + anoReferencia);
 
         try {
             connection = Conexao.conectar();
@@ -367,9 +368,6 @@ public class Ficha03DAO {
             if (rs.next()) {
                 valorPlanilhaBrl = rs.getDouble("total_consolidado");
             }
-            
-        System.out.println("Valor Informado: " + valorInformadoOriginal);
-        System.out.println("Valor Banco (Tri " + triReferencia + "): " + valorPlanilhaBrl);
 
             // Validação ( > 0.5% )
             if (valorPlanilhaBrl != 0) {
@@ -377,7 +375,6 @@ public class Ficha03DAO {
                 double percentual = (diferenca / valorPlanilhaBrl) * 100;
                 if (percentual > 0.5) {
                     precisaJustificar = true;
-                    System.out.println("Diferenca Calculada: " + String.format("%.2f", percentual) + "%");
                 }
             } else if (valorInformadoOriginal != 0) {
                 precisaJustificar = true;

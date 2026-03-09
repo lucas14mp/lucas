@@ -246,7 +246,11 @@
                     <div id="modalJustificativa" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6);">
                         <div style="background-color:#fff; margin:10% auto; padding:25px; border:1px solid #888; width:50%; border-radius:8px; text-align:center;">
                             <h2 style="color: #003366;">Aviso de Variação</h2>
-                            <p>Valor divergente da base. Justifique:</p>
+                            <p style="font-size: 16px; color: #333; margin-bottom: 20px;">
+                                A diferença entre o valor informado e o valor de referência na base de dados é muito divergente.
+                                <br><br>
+                                Para prosseguir com o envio desta ficha, é <strong>obrigatório</strong> justificar o motivo desta divergência.
+                            </p>
                             <textarea id="textoJustificativa" rows="5" style="width:100%;"></textarea>
                             <div style="margin-top:10px;">
                                 <button type="button" id="btnConfirmarJustificativa" class="btn">Confirmar</button>

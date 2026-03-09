@@ -45,7 +45,7 @@ public class Ficha16DAO {
 
     public static void update(Ficha16 ficha) {
 
-        String sql = "UPDATE ficha16 SET id_pais = ?, id_moeda = ?, tipo_outros_direitos = ?, valor_database = ?, chave = ?, data_criacao = ? WHERE id = ?";
+        String sql = "UPDATE ficha16 SET id_pais = ?, id_moeda = ?, tipo_outros_direitos = ?, valor_database = ?, chave = ?, data_criacao = ? justificativa_gestor = ?  WHERE id = ?";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -58,6 +58,7 @@ public class Ficha16DAO {
             pst.setString(5, ficha.getFuncionario().getChave());
             pst.setDate(6, new java.sql.Date(ficha.getDataCriacao().getTime()));
             pst.setInt(7, ficha.getId());
+            pst.setString(8, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -109,6 +110,7 @@ public class Ficha16DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
 
                 listaFichas.add(ficha);
             }
@@ -202,6 +204,7 @@ public class Ficha16DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {
@@ -307,6 +310,7 @@ public class Ficha16DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -353,6 +357,7 @@ public class Ficha16DAO {
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {

@@ -18,7 +18,7 @@ public class Ficha11MenorDAO {
 
     public static void create(Ficha11Menor ficha) {
 
-        String sql = "INSERT INTO ficha11_participacao_menor(metodo_valoracao, valor_participacao, lucro_distribuido, data_criacao, trimestre, id_moeda, id_pais, chave, id_status) VALUES (?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO ficha11_participacao_menor(metodo_valoracao, valor_participacao, lucro_distribuido, data_criacao, trimestre, id_moeda, id_pais, chave, id_status, justificativa_gestor) VALUES (?,?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -33,6 +33,7 @@ public class Ficha11MenorDAO {
             pst.setInt(7, ficha.getPais().getId());
             pst.setString(8, ficha.getFuncionario().getChave());
             pst.setInt(9, ficha.getStatus().getId());
+            pst.setString(10, ficha.getJustificativaGestor());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -91,7 +92,7 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
 //    
     public static void update(Ficha11Menor ficha) {
 
-        String sql = "UPDATE ficha11_participacao_menor SET metodo_valoracao = ?, valor_participacao = ?, lucro_distribuido = ?, id_moeda = ?, id_pais = ?, chave = ?, data_criacao = ? WHERE id = ?";
+        String sql = "UPDATE ficha11_participacao_menor SET metodo_valoracao = ?, valor_participacao = ?, lucro_distribuido = ?, id_moeda = ?, id_pais = ?, chave = ?, data_criacao = ?, justificativa_gestor = ? WHERE id = ?";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
@@ -104,7 +105,8 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
             pst.setInt(5, ficha.getPais().getId());
             pst.setString(6, ficha.getFuncionario().getChave());
             pst.setDate(7, new java.sql.Date(ficha.getDataCriacao().getTime()));
-            pst.setInt(8, ficha.getId());
+            pst.setString(8, ficha.getJustificativaGestor());            
+            pst.setInt(9, ficha.getId());
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -156,6 +158,7 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -210,6 +213,7 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 listaFichas.add(ficha);
             }
         } catch (SQLException e) {
@@ -246,6 +250,7 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {

@@ -68,7 +68,7 @@ public class ComparadorService {
                 // Deixando o espaço conforme solicitado. 
                 // Quando tiver o ID, troque o null pelo número (ex: 9999)
                 Integer idDepFutura = null; 
-                valorFicha = Ficha08DAO.getSomaPorDependencia(trimestreRef, ano, idDepFutura);    
+                valorFicha = Ficha08DAO.getSomaPorDependencia(trimestreRef, ano, 8555);    
                 
             } else if ("18".equals(ficha)) {
                 // --- CORREÇÃO FICHA 18 ---

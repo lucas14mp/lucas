@@ -11,7 +11,6 @@
 <%@page import="java.time.LocalDate"%>
 
 <%
-    // --- 1. LÓGICA DO FILTRO ---
     LocalDate hoje = LocalDate.now();
     int anoSelecionado = hoje.getYear();
     int trimSelecionado = (hoje.getMonthValue() - 1) / 3 + 1;
@@ -97,6 +96,14 @@
     <div class="view-container">
         <div class="topo-view" style="flex-direction: column; align-items: flex-start;">
             <h2>PTAX e Conversões</h2>
+
+            <div style="display: flex; width: 100%; justify-content: flex-end;">
+                <button type="button" class="btn" id="voltar"
+                        onclick="location.href='../index.jsp'"
+                        style="display: inline-block; width: auto;">
+                    Voltar
+                </button>
+            </div>
             
             <form action="taxas.jsp" method="GET" style="margin-top: 15px; background: #e8f0fe; padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: flex-end;">
                 <div style="display: flex; flex-direction: column;">

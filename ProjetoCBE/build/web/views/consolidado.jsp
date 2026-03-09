@@ -206,7 +206,7 @@
         <div class="view-container"> 
             <div style="display: flex; align-items: center; width: 95%; margin: 0 auto 10px auto;">
                 <h3 style="flex: 1; margin: 0;">Resumo dos ativos</h3>
-                <button type="button" class="btn salvar" onclick="salvarValoresBacen()">Salvar Valores Bacen</button>
+                <button type="button" class="btn salvar" onclick="salvarValoresBacen()">Salvar Valores BACEN</button>
             </div>
 
         <table border="1" class="table-lista-fichas" id="tabelaResumo">
@@ -214,7 +214,7 @@
 
                     <th style="padding: 10px;">Descrição ou Ativos consolidados</th>
                     <th style="padding: 10px;">Valor Ficha (US$)</th>
-                    <th style="padding: 10px; width: 150px;">Valor Bacen (US$) <br><small>(Manual)</small></th>
+                    <th style="padding: 10px; width: 150px;">Valor BACEN (US$) <br><small>(Manual)</small></th>
                     <th style="padding: 10px;">Diferença (US$)</th>
                     <th style="padding: 10px; width: 80px;">(%)</th> </tr>
             </thead>

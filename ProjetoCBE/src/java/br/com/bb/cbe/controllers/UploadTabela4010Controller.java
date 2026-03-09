@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import org.apache.poi.ss.usermodel.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/UploadTabela4010Controller")
 @MultipartConfig
@@ -173,7 +175,9 @@ public class UploadTabela4010Controller extends HttpServlet {
             stmtInsert.executeBatch();
             conn.commit();
             
-            resp.sendRedirect(req.getContextPath() + "/views/ficha11.jsp?msg=Sucesso");
+            String msg = URLEncoder.encode("Sucesso", StandardCharsets.UTF_8.toString());
+            resp.sendRedirect(req.getContextPath() + "/filtro4010Conciliacao.jsp?msg=" + msg);
+            return;
 
         } catch (Exception e) {
             e.printStackTrace();

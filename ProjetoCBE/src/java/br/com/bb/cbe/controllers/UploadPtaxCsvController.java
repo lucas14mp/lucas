@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/UploadPtaxCsvController")
 @MultipartConfig
@@ -133,7 +135,10 @@ public class UploadPtaxCsvController extends HttpServlet {
             stmtInsert.executeBatch();
             conn.commit();
             
-            resp.sendRedirect(req.getContextPath() + "/views/taxas.jsp?msg=UploadSucesso");
+            
+            String msg = URLEncoder.encode("Sucesso", StandardCharsets.UTF_8.toString());
+            resp.sendRedirect(req.getContextPath() + "/filtroPtax.jsp?msg=" + msg);
+            return;
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -84,6 +84,19 @@
                         <div class="simbolo-moedas" id='simboloMoeda'>${moeda.getSimbolo()}</div>
                         <input class="input-moedas" type="text" name="valor" required id="valor" placeholder="Digite um valor maior que 0" pattern="^(?!.*[.,]$)(?!^[.,])(?!.*[.,]{2})(0*[1-9]\d*(\.\d+)*)(,\d+)?$" value="${numeroUtils.doubleToString(ficha.getValorDatabase())}">
                     </div>
+                    
+                    <label for="justificativa_gestor">Justificativa do Gestor: <span class="asterisco">*</span></label></label>
+                    </div>
+                    <p class="descricao">Caso necessário, edite a justificativa para a divergência de valores.</p>
+
+                    <textarea 
+                        name="justificativa_gestor" 
+                        id="justificativa_gestor" 
+                        rows="5" 
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"
+                        placeholder="Nenhuma justificativa registrada."
+                        >${ficha.justificativaGestor}</textarea>
+                    <br><br>
 
                     <input type="submit" value="Salvar" class="btn salvar">
                 </form>
