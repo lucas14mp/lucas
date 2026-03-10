@@ -834,26 +834,21 @@ private void salvarLote(JsonObject json, String chaveFuncionario) throws Excepti
             isUpe = json.get("flagUpe").getAsBoolean();
         }
 
-        List<Ficha11Maior> lista = new ArrayList<>();
+        java.text.SimpleDateFormat anoFormat = new java.text.SimpleDateFormat("yyyy");
+        int anoFicha = Integer.parseInt(anoFormat.format(new java.util.Date()));
+        int trimestreAtual = DataUtils.validaTrimestre();
 
         for (JsonElement el : itens) {
             JsonObject item = el.getAsJsonObject();
             Ficha11Maior f = new Ficha11Maior();
 
-            // IDs e FKs
-            Empresa emp = new Empresa();
-            emp.setId(item.get("id_empresa").getAsInt());
-            f.setEmpresa(emp);
+            // IDs e Mapeamento
+            Empresa emp = new Empresa(); emp.setId(item.get("id_empresa").getAsInt()); f.setEmpresa(emp);
+            Moeda m = new Moeda(); m.setId(item.get("id_moeda").getAsInt()); f.setMoeda(m);
 
-            Moeda m = new Moeda();
-            m.setId(item.get("id_moeda").getAsInt());
-            f.setMoeda(m);
-
-            // Mapeamento com as chaves exatas do banco/JSON
             f.setPossuiCotacaoEmBolsa(item.get("possui_cotacao_em_bolsa").getAsBoolean());
             f.setMetodoValoracao(item.get("metodo_valoracao").getAsString());
             f.setControlaEmpresa(item.get("controla_empresas").getAsBoolean());
-            
             f.setValorEmpresa(item.get("valor_empresa").getAsDouble());
             f.setPatrimonioTotal(item.get("patrimonio_total").getAsDouble());
             f.setPorcentoParticipacaoCapital(item.get("participacao_capital_social").getAsDouble());
@@ -866,24 +861,32 @@ private void salvarLote(JsonObject json, String chaveFuncionario) throws Excepti
             f.setResultadoLiquidoVariacaoCambial(item.get("result_liq_variacao_cambial").getAsDouble());
             f.setLucroDistribuido(item.get("lucro_distribuido").getAsDouble());
 
-            // Lógica UPE -> Diretoria
-            if (isUpe) { f.setDiretoria("UPE"); } else { f.setDiretoria(null); }
-
-            // Campos de Controle
-            f.setTrimestre(DataUtils.validaTrimestre());
+            // Controle
+            f.setTrimestre(trimestreAtual);
             f.setDataCriacao(new java.util.Date());
-            Funcionario func = new Funcionario();
-            func.setChave(chaveFuncionario);
-            f.setFuncionario(func);
-            Status s = new Status(); s.setId(1);
-            f.setStatus(s);
+            Funcionario func = new Funcionario(); func.setChave(chaveFuncionario); f.setFuncionario(func);
+            Status s = new Status(); s.setId(1); f.setStatus(s);
             f.setJustificativaGestor(justificativa);
 
-            lista.add(f);
-        }
+            List<Ficha11Maior> temp = new ArrayList<>();
+            temp.add(f);
 
-        if (!lista.isEmpty()) {
-            Ficha11MaiorDAO.createBatch(lista);
+            // Identifica se a ficha já existe para atualizar ou inserir
+            boolean existe = Ficha11MaiorController.empresaExiste(f.getEmpresa().getId(), f.getTrimestre(), anoFicha);
+
+            if (isUpe) {
+                // SALVA A UPE (Gravando zero nos financeiros sem erro)
+                if (existe) Ficha11MaiorDAO.updateBatchUpe(temp);
+                else Ficha11MaiorDAO.createBatchUpe(temp);
+            } else {
+                // SALVA A COGER (Gravando as finanças reais)
+                if (existe) Ficha11MaiorDAO.updateBatchCoger(temp);
+                else Ficha11MaiorDAO.createBatchCoger(temp);
+            }
+            
+            // MÁGICA FINAL: Independente de quem enviou (UPE ou COGER), essa função força o banco
+            // a olhar se os dois existem e copia os números do registro COGER para o registro UPE.
+            Ficha11MaiorDAO.sincronizarValoresCogerParaUpe(f.getEmpresa().getId(), f.getTrimestre(), anoFicha);
         }
     }
 }

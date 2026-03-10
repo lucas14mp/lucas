@@ -284,13 +284,129 @@
                     <div class="formulario11Maior" id="formulario11Maior">
                         <h3>Como enviar as informações?</h3>
                         <br>
+                        <div style="margin-top: 20px; margin-bottom: 30px;">
+                            <h4 style="color: #003366; margin-bottom: 10px; font-size: 16px;">
+                                <i class="bi bi-info-circle-fill" style="color: #0056b3; margin-right: 5px;"></i>
+                                Exemplo de como a planilha deve ser preenchida:
+                            </h4>
+
+                            <div class="table-responsive" style="border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <table class="table table-bordered table-striped" style="font-size: 12px; margin-bottom: 0; min-width: 2500px; background-color: #fff;">
+                                    <thead style="background-color: #003366; color: #ffffff;">
+                                        <tr>
+                                            <th style="padding: 10px;">Empresa</th>
+                                            <th style="padding: 10px;">Esta empresa possui cotação em bolsa de valores no exterior?</th>
+                                            <th style="padding: 10px;">Moeda do país da empresa no exterior</th>
+                                            <th style="padding: 10px;">Método de valoração</th>
+                                            <th style="padding: 10px;">A empresa no exterior controla outras empresas?</th>
+                                            <th style="padding: 10px;">Valor da empresa na data-base</th>
+                                            <th style="padding: 10px;">Patrimônio Líquido total na data-base</th>
+                                            <th style="padding: 10px;">Percentual de participação no capital social</th>
+                                            <th style="padding: 10px;">Percentual de poder de voto</th>
+                                            <th style="padding: 10px;">Ativo na data-base</th>
+                                            <th style="padding: 10px;">Passivo exigível na data-base</th>
+                                            <th style="padding: 10px;">Valor total do lucro ou prejuízo líquidos da empresa no exterior</th>
+                                            <th style="padding: 10px;">Resultado líquido de itens não recorrentes</th>
+                                            <th style="padding: 10px;">Resultado líquido de reavaliações (ex. Impairment):</th>
+                                            <th style="padding: 10px;">Resultado líquido de variação cambial</th>
+                                            <th style="padding: 10px;">Lucro distribuído no período-base</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody style="color: #333;">
+                                        <tr>
+                                            <td>Banco Patagonia S.A.</td>
+                                            <td>SIM</td>
+                                            <td>Peso Argentino</td>
+                                            <td>Cotação em bolsa</td>
+                                            <td>SIM</td>
+                                            <td>2002819000000,00</td>
+                                            <td>150000000000,00</td>
+                                            <td>80,39</td>
+                                            <td>80,39</td>
+                                            <td>5000000000000,00</td>
+                                            <td>3500000000000,00</td>
+                                            <td>4500000000,00</td>
+                                            <td>0,00</td>
+                                            <td>0,00</td>
+                                            <td>1200000,00</td>
+                                            <td>0,00</td>
+                                        </tr>
+
+                                        <c:if test="${uor_equipe == '315118' || uor_equipe == '284073' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
+                                            <tr>
+                                                <td>BB Cayman Islands Holding Inc.</td>
+                                                <td>NÃO</td>
+                                                <td>Dólar Americano</td>
+                                                <td>Valor patrimonial</td>
+                                                <td>SIM</td>
+                                                <td style="color: #d9534f; font-weight: bold;">VALOR PL INFO COGER</td>
+                                                <td></td>
+                                                <td>100,00</td>
+                                                <td>100,00</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                        </c:if>
+
+                                        <tr>
+                                            <td>BB Assunção</td>
+                                            <td>NÃO</td>
+                                            <td>Guarani</td>
+                                            <td>Valor patrimonial</td>
+                                            <td>NÃO</td>
+                                            <td>163028041512,80</td>
+                                            <td>163028041512,80</td>
+                                            <td>100,00</td>
+                                            <td>100,00</td>
+                                            <td>1078508649672,42</td>
+                                            <td>915480608159,61</td>
+                                            <td>6721010667,11</td>
+                                            <td>0,00</td>
+                                            <td>-4413337814,45</td>
+                                            <td>6376881497,07</td>
+                                            <td>0,00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Banco do Brasil Aktiengesellschaft (BB AG)</td>
+                                            <td>NÃO</td>
+                                            <td>Euro</td>
+                                            <td>Valor patrimonial</td>
+                                            <td>NÃO</td>
+                                            <td>85000000,50</td>
+                                            <td>85000000,50</td>
+                                            <td>100,00</td>
+                                            <td>100,00</td>
+                                            <td>250000000,00</td>
+                                            <td>165000000,50</td>
+                                            <td>1200500,00</td>
+                                            <td>0,00</td>
+                                            <td>-5000,00</td>
+                                            <td>15000,00</td>
+                                            <td>500000,00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <c:if test="${uor_equipe == '315118' || uor_equipe == '284073' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
+                                    <div style="padding: 10px; background-color: #fdfdfd; font-size: 12px; color: #555; border-top: 1px solid #ccc;">
+                                        <b><i class="bi bi-lightbulb-fill" style="color: #ffc107;"></i> Nota:</b> No preenchimento da <b>UPE</b>, os valores financeiros podem conter textos indicativos (ex: <i>"VALOR PL INFO COGER"</i>) ou ficarem em branco, pois a COGER completará os dados posteriormente. Não digite símbolos de moeda ("R$") nem porcentagem ("%") no arquivo Excel.
+                                    </div>
+                                </c:if>
+
+                            </div>
+                        </div>
                         <p>
                             As informações devem ser enviadas diretamente do arquivo Excel e anexadas na caixa de envio presente ao final da página.
                         </p>
                         <b>Atenção:</b> A planilha deve conter os dados na exata ordem das colunas abaixo, se estiver diferente não dará certo.
                         <br><br>
                         <div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #ccc;">
-                            <a href="${pageContext.request.contextPath}/web/resources/arquivos/Modelo_Ficha11_Maior.xlsx" download="Modelo_Ficha11_Maior.xlsx" style="text-decoration: none;">
+                            <a href="${pageContext.request.contextPath}/DownloadModeloFicha11" style="text-decoration: none;">
                                 <button type="button" class="btn" style="background-color: #28a745; color: white; padding: 8px 20px; font-size: 14px; border: none; border-radius: 4px; cursor: pointer;">
                                     <i class="bi bi-file-earmark-excel-fill"></i> Baixar Modelo Excel
                                 </button>
@@ -456,8 +572,32 @@
                                 </c:when>      
                             </c:choose>
 
+                            <div class="label-container11">
+                                <label>Moeda do país da empresa no exterior:</label>
+                            </div>
+                            <p class="descricao11">Para o upload funcionar, o nome da moeda na planilha deve ser idêntico ao cadastrado no sistema. 
+                                <a onClick="mostrarTabela('tabelaMoedaMaior')" class="link-expande11">
+                                    Clique aqui para visualizar a tabela.
+                                </a>
+                            </p>
+                            <div class="label-container11">
+                                <div class="table-relatorio11" id="tabelaMoedaMaior" style="display: none;">
+                                    <table class="view11" style="margin-bottom: 25px;">
+                                        <tr>
+                                            <td class="cabecalho11">Nome</td>
+                                        </tr>
+                                        <c:forEach items='${moedaController.listarMoedas()}' var='moeda'>
+                                            <tr>
+                                                <td>${moeda.getNome()}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </table>
+                                </div>
+                            </div>
+                            <br>
+
                             <div class="area-upload">
-                                <h3 style="color: #333;">Anexar Planilha Maior 10%</h3>
+                                <h3 style="color: #333;">Anexar Planilha Maior ou Igual a 10%</h3>
                                 <form id="formUploadExcelMaior" action="${pageContext.request.contextPath}/UploadFicha11MaiorController" method="post" enctype="multipart/form-data">
 
                                     <label for="arquivoExcelMaior" style="font-weight: bold; display: block; margin-bottom: 5px;">
@@ -489,26 +629,27 @@
                                 <option value="nao">Não</option>
                                 <option value="sim">Sim</option>
                             </select>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped" id="tabelaItensMaior" style="min-width: 2500px;"> <thead>
+                            <div class="table-responsive" style="border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <table class="table table-bordered table-striped" id="tabelaItensMaior" style="min-width: 2500px; font-size: 13px;"> 
+                                    <thead style="background-color: #f4f7f6; color: #333;">
                                         <tr>
-                                            <th style="min-width: 200px;">Empresa</th>
-                                            <th>Cotação Bolsa?</th>
-                                            <th>Moeda</th>
-                                            <th>Método Valoração</th>
-                                            <th>Controla Outras?</th>
-                                            <th>Valor Empresa</th>
-                                            <th>Patr. Líquido</th>
-                                            <th>% Cap</th>
-                                            <th>% Voto</th>
-                                            <th>Ativo</th>
-                                            <th>Passivo</th>
-                                            <th>Lucro/Prej Liq</th>
-                                            <th>Itens Não Rec.</th>
-                                            <th>Reavaliações</th>
-                                            <th>Var. Cambial</th>
-                                            <th>Lucro Dist.</th>
-                                            <th style="width: 80px; position: sticky; right: 0; background: #fff;">Ação</th>
+                                            <th style="min-width: 200px; vertical-align: middle;">Empresa</th>
+                                            <th style="vertical-align: middle;">Esta empresa possui cotação em bolsa de valores no exterior?</th>
+                                            <th style="vertical-align: middle;">Moeda do país da empresa no exterior</th>
+                                            <th style="vertical-align: middle;">Método de valoração</th>
+                                            <th style="vertical-align: middle;">A empresa no exterior controla outras empresas?</th>
+                                            <th style="vertical-align: middle;">Valor da empresa na data-base</th>
+                                            <th style="vertical-align: middle;">Patrimônio Líquido total na data-base</th>
+                                            <th style="vertical-align: middle;">Percentual de participação no capital social</th>
+                                            <th style="vertical-align: middle;">Percentual de poder de voto</th>
+                                            <th style="vertical-align: middle;">Ativo na data-base</th>
+                                            <th style="vertical-align: middle;">Passivo exigível na data-base</th>
+                                            <th style="vertical-align: middle;">Valor total do lucro ou prejuízo líquidos da empresa no exterior</th>
+                                            <th style="vertical-align: middle;">Resultado líquido de itens não recorrentes</th>
+                                            <th style="vertical-align: middle;">Resultado líquido de reavaliações (ex. Impairment):</th>
+                                            <th style="vertical-align: middle;">Resultado líquido de variação cambial</th>
+                                            <th style="vertical-align: middle;">Lucro distribuído no período-base</th>
+                                            <th style="width: 80px; position: sticky; right: 0; background: #f4f7f6; z-index: 1; vertical-align: middle; text-align: center;">Ação</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -516,7 +657,7 @@
                             </div>
 
                             <div class="botoes" id="areaBotaoFinalMaior" style="display:none; margin-top: 20px; justify-content: center;">
-                                <button type="button" class="btn salvar" id="btnFinalizarLoteMaior">Salvar e Enviar Ficha Maior</button>
+                                <button type="button" class="btn salvar" id="btnFinalizarLoteMaior">Salvar e Enviar Ficha</button>
                             </div>
 
                         </div>
@@ -526,18 +667,18 @@
                         <script src="/ProjetoCBE/resources/js/temas.js"></script>
                         <script src="../resources/js/ficha11Maior.js"></script>
                         <script>
-                                                            $(document).ready(function () {
-                                                                // Toggle entre Menor e Maior
-                                                                $('input[name="resposta-participacao"]').change(function () {
-                                                                    if ($('#danger-outlined').is(':checked')) {
-                                                                        $('#wrapperMenor').show();
-                                                                        $('#wrapperMaior').hide();
-                                                                    } else {
-                                                                        $('#wrapperMenor').hide();
-                                                                        $('#wrapperMaior').show();
-                                                                    }
-                                                                });
-                                                            });
+                                    $(document).ready(function () {
+                                        // Toggle entre Menor e Maior
+                                        $('input[name="resposta-participacao"]').change(function () {
+                                            if ($('#danger-outlined').is(':checked')) {
+                                                $('#wrapperMenor').show();
+                                                $('#wrapperMaior').hide();
+                                            } else {
+                                                $('#wrapperMenor').hide();
+                                                $('#wrapperMaior').show();
+                                            }
+                                        });
+                                    });
                         </script>
                         <script>
                             function ordenarTabela1() {
@@ -575,11 +716,11 @@
                                 const referencia = document.getElementById("submitButton");
 
                                 // Verifica se o nó de referência é um filho do nó pai
-        //                        if (pai.contains(referencia)) {
-        //                            console.log("O nó de referência é um filho do nó pai.");
-        //                        } else {
-        //                            console.log("O nó de referência não é um filho do nó pai.");
-        //                        }
+                                //                        if (pai.contains(referencia)) {
+                                //                            console.log("O nó de referência é um filho do nó pai.");
+                                //                        } else {
+                                //                            console.log("O nó de referência não é um filho do nó pai.");
+                                //                        }
 
                                 var tbody = document.getElementById("tbody2");
                                 var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr[id=ids]')); // Captura todas as linhas no tbody

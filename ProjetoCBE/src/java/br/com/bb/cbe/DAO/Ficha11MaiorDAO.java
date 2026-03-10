@@ -805,4 +805,48 @@ public class Ficha11MaiorDAO {
         // Se precisar de lógica específica por COSIF, ajuste aqui.
         return false; // Por padrão falso, implemente a query do consolidado se necessário.
     }
+    
+    public static void sincronizarValoresCogerParaUpe(int idEmpresa, int trimestre, int ano) {
+        // Copia os dados financeiros exatos do registro da COGER para o da UPE
+        String sql = "UPDATE ficha11_participacao_maior upe " +
+                     "JOIN ficha11_participacao_maior coger " +
+                     "  ON upe.id_empresa = coger.id_empresa " +
+                     " AND upe.trimestre = coger.trimestre " +
+                     " AND YEAR(upe.data_criacao) = YEAR(coger.data_criacao) " +
+                     "SET " +
+                     "  upe.valor_empresa = coger.valor_empresa, " +
+                     "  upe.patrimonio_total = coger.patrimonio_total, " +
+                     "  upe.ativo_database = coger.ativo_database, " +
+                     "  upe.passivo_exigivel = coger.passivo_exigivel, " +
+                     "  upe.valor_total_lucro_preju_liquido = coger.valor_total_lucro_preju_liquido, " +
+                     "  upe.result_liq_itens_nao_recorrentes = coger.result_liq_itens_nao_recorrentes, " +
+                     "  upe.result_liq_reavaliacoes = coger.result_liq_reavaliacoes, " +
+                     "  upe.result_liq_variacao_cambial = coger.result_liq_variacao_cambial, " +
+                     "  upe.lucro_distribuido = coger.lucro_distribuido " +
+                     "WHERE upe.diretoria = 'UPE' " +
+                     "  AND coger.diretoria = 'COGER' " +
+                     "  AND upe.id_empresa = ? " +
+                     "  AND upe.trimestre = ? " +
+                     "  AND YEAR(upe.data_criacao) = ?";
+
+        Connection conn = null;
+        PreparedStatement pst = null;
+        try {
+            conn = Conexao.conectar();
+            pst = conn.prepareStatement(sql);
+            pst.setInt(1, idEmpresa);
+            pst.setInt(2, trimestre);
+            pst.setInt(3, ano);
+            int qtdeAlterada = pst.executeUpdate();
+            
+            if (qtdeAlterada > 0) {
+                System.out.println(">>> SINCRONIZADO: Valores financeiros da COGER injetados na ficha da UPE (Empresa ID: " + idEmpresa + ")");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao sincronizar COGER -> UPE: " + e.getMessage());
+        } finally {
+            Conexao.fecharConexao(conn, pst, null);
+        }
+    }
+    
 }

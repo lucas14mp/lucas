@@ -3,6 +3,14 @@ var listaItensMaior = [];
 $(document).ready(function() {
     console.log(">>> Ficha 11 Maior JS Iniciado");
 
+    // --- NOVO: ATUALIZA A TABELA EM TEMPO REAL AO MUDAR O SELECT DA UPE ---
+    $(document).on('change', '#selectUpe', function() {
+        if (listaItensMaior.length > 0) {
+            atualizarTabelaMaior();
+        }
+    });
+    // ----------------------------------------------------------------------
+
     // --- 1. CONTROLE VISUAL DO INPUT DE ARQUIVO ---
     $(document).on('change', '#arquivoExcelMaior', function() {
         if ($(this).val()) {
@@ -21,10 +29,6 @@ $(document).ready(function() {
     $(document).on('submit', '#formUploadExcelMaior', function(e) {
         e.preventDefault(); 
         
-        // NOTA: A validação da UPE foi removida daqui conforme solicitado.
-        // Ela ocorrerá apenas no botão "Salvar e Enviar".
-
-        // Validação do Arquivo
         var inputArquivo = $('#arquivoExcelMaior');
         var nomeArquivo = inputArquivo.val();
 
@@ -37,7 +41,6 @@ $(document).ready(function() {
             return;
         }
 
-        // Envio AJAX para ler o Excel
         var formData = new FormData(this);
         var btnUpload = $(this).find('button[type="submit"]');
         var actionUrl = $(this).attr('action'); 
@@ -60,14 +63,14 @@ $(document).ready(function() {
                 if (response.erro) {
                     alert("Erro no upload: " + response.erro);
                 } else if (Array.isArray(response)) {
-                    // Adiciona os novos itens à lista existente
                     response.forEach(function(item) {
                         listaItensMaior.push(item);
                     });
+                    
+                    // Desenha a tabela com os dados
                     atualizarTabelaMaior();
                     alert("Leitura concluída! " + response.length + " registros carregados na tabela.");
                     
-                    // Limpa o input após sucesso
                     inputArquivo.val('');
                     $('#btnRemoverMaior').hide();
                 } else {
@@ -92,14 +95,13 @@ $(document).ready(function() {
             return;
         }
         
-        // --- VALIDAÇÃO DA UPE (AGORA É AQUI) ---
+        // Validação obrigatória da UPE na hora de salvar
         var selectUpe = $('#selectUpe').val();
         if (!selectUpe) {
             alert('Por favor, selecione acima se pertence à Diretoria UPE antes de salvar.');
-            $('#selectUpe').focus(); // Foca no campo para o usuário ver
-            return; // Impede o envio
+            $('#selectUpe').focus(); 
+            return; 
         }
-        // ---------------------------------------
         
         var isUpe = (selectUpe === 'sim');
         
@@ -135,35 +137,48 @@ function atualizarTabelaMaior() {
     var tbody = $('#tabelaItensMaior tbody');
     tbody.empty();
     
-    // Função auxiliar para formatar números (R$)
+    // Verifica em tempo real qual opção está selecionada no select
+    var isUpe = $('#selectUpe').val() === 'sim';
+    
     function f(val) {
         return parseFloat(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     
-    // Função auxiliar para formatar booleanos (SIM/NÃO)
     function b(val) {
         if (typeof val === 'string') return val.toUpperCase();
         return (val === true || val === 1) ? "SIM" : "NÃO";
     }
 
     listaItensMaior.forEach(function(item, index) {
+        
+        // Se for UPE, exibe mensagem cinza. Senão, mostra o valor normal.
+        var valEmpresa = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.valor_empresa);
+        var patrimTotal = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.patrimonio_total);
+        var ativo = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.ativo_database);
+        var passivo = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.passivo_exigivel);
+        var lucro = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.valor_total_lucro_preju_liquido);
+        var itensNR = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.result_liq_itens_nao_recorrentes);
+        var reaval = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.result_liq_reavaliacoes);
+        var varCamb = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.result_liq_variacao_cambial);
+        var lucroDist = isUpe ? "<span style='color:#888; font-style:italic;'>Pela COGER</span>" : f(item.lucro_distribuido);
+
         var tr = `<tr>
             <td style="text-align: left; white-space: nowrap;">${item.nome_empresa || ''}</td>
             <td>${b(item.possui_cotacao_em_bolsa)}</td>
             <td>${item.nome_moeda || ''}</td>
             <td style="white-space: nowrap;">${item.metodo_valoracao || ''}</td>
             <td>${b(item.controla_empresas)}</td>
-            <td>${f(item.valor_empresa)}</td>
-            <td>${f(item.patrimonio_total)}</td>
+            <td>${valEmpresa}</td>
+            <td>${patrimTotal}</td>
             <td>${f(item.participacao_capital_social)}%</td>
             <td>${f(item.porcento_poder_voto)}%</td>
-            <td>${f(item.ativo_database)}</td>
-            <td>${f(item.passivo_exigivel)}</td>
-            <td>${f(item.valor_total_lucro_preju_liquido)}</td>
-            <td>${f(item.result_liq_itens_nao_recorrentes)}</td>
-            <td>${f(item.result_liq_reavaliacoes)}</td>
-            <td>${f(item.result_liq_variacao_cambial)}</td>
-            <td>${f(item.lucro_distribuido)}</td>
+            <td>${ativo}</td>
+            <td>${passivo}</td>
+            <td>${lucro}</td>
+            <td>${itensNR}</td>
+            <td>${reaval}</td>
+            <td>${varCamb}</td>
+            <td>${lucroDist}</td>
             
             <td style="text-align:center; position: sticky; right: 0; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
                 <span onclick="removerItemMaior(${index})" style="cursor:pointer; color:red; font-weight:bold; font-size: 1.2em;" title="Remover item">X</span>
@@ -174,7 +189,6 @@ function atualizarTabelaMaior() {
 
     if (listaItensMaior.length > 0) {
         $('#areaBotaoFinalMaior').show();
-        // Ajusta overflow para permitir rolagem horizontal
         $('#tabelaItensMaior').parent().css('overflow-x', 'auto');
     } else {
         $('#areaBotaoFinalMaior').hide();
