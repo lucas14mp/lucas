@@ -20,6 +20,22 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 
+<%
+    // Lógica do Filtro Inteligente Limpo
+    String anoFiltro = request.getParameter("anoFiltro");
+    String trimestreFiltro = request.getParameter("trimestreFiltro");
+    String empresaFiltro = request.getParameter("empresaFiltro");
+    
+    // O DAO inteligente cuida de todas as combinações!
+    List<br.com.bb.cbe.Bean.Ficha11Maior> listaFichasMaior = ficha11MaiorController.readComFiltros(trimestreFiltro, anoFiltro, empresaFiltro);
+    List<br.com.bb.cbe.Bean.Ficha11Menor> listaFichasMenor = ficha11MenorController.readComFiltros(trimestreFiltro, anoFiltro);
+    
+    pageContext.setAttribute("listaFichasMaior", listaFichasMaior);
+    pageContext.setAttribute("listaFichasMenor", listaFichasMenor);
+    pageContext.setAttribute("anosDisponiveis", ficha11MaiorController.getAnosExistentes());
+    pageContext.setAttribute("trimestresDisponiveis", ficha11MaiorController.getTrimestresExistentes());
+%>
+
 <!DOCTYPE html>  
 <html>
   <head>
@@ -28,37 +44,14 @@
     <title>Lista Ficha 11</title>
   </head>
   <body>
-   
-      <%
-        
-        String taxasJson = PtaxController.getAllTaxasJson();
-        String fichasMenorJson = ficha11MenorController.getAllFichasJson();
-        String contabilJson = ContabilController.getAllCosifsJson();
-//        List<Moeda> moedas = new ArrayList<>();
-//        Moeda moeda = MoedaController.getMoedaById(1);
-        
-//        for(Ficha11Menor ficha: fichasMenor){
-//            Moeda moedinha = ficha.getMoeda();
-//            System.out.println("MOEDA " + moedinha.getNome());
-//            moedas.add(moedinha);
-//          }
-        
-//        String nome = moeda.getNome();
-        int trimestre = dataUtils.validaTrimestre();
-        SimpleDateFormat anoFormat = new SimpleDateFormat("yyyy");
-        int ano = Integer.parseInt(anoFormat.format(new Date()));
-        pageContext.setAttribute("trimestre", trimestre);
-        pageContext.setAttribute("ano", ano);
-//        request.setAttribute("nome", nome);
-        request.setAttribute("taxasJson", taxasJson);
-        request.setAttribute("fichasMenorJson", fichasMenorJson);
-        request.setAttribute("contabilJson", contabilJson);
-      %>
       
-      
-      <input type="hidden" id="taxas" value="${taxas}">
-      <input type="hidden" id="contextPath" value="<%=request.getContextPath()%>">
     <%@include file="../topo.jsp"%>
+      
+    <div class="main-container" style="padding-top: 30px;">        
+        
+        <input type="hidden" id="taxas" value="${taxas}">
+        <input type="hidden" id="contextPath" value="<%=request.getContextPath()%>">
+        
     <div class="view-container">
       <div class="topo-view">
         <h2>Ficha 11 - Empresas - Participação no capital</h2> 
@@ -69,20 +62,63 @@
                   <input type="button" class="btn btn-validar" value="Validar" data-ficha="ficha11/maior" style="display: none;" id="valida-maior" title="É necessário ter o cargo de gerente para validar as informações">
               </c:when>
               <c:otherwise>
-                  <input type="button" class="btn btn-validar" value="Validar" data-ficha="ficha11/menor" style="display: none;" id="valida-menor" title="É necessário ter o cargo de gerente para validar as informações">
-                  <input type="button" class="btn btn-validar" value="Validar" data-ficha="ficha11/maior" style="display: none;" id="valida-maior" title="É necessário ter o cargo de gerente para validar as informações">
+                  <input type="button" class="btn btn-validar btn-disabled" value="Validar" style="display: none;" id="valida-menor" title="É necessário ter o cargo de gerente para validar as informações" disabled>
+                  <input type="button" class="btn btn-validar btn-disabled" value="Validar" style="display: none;" id="valida-maior" title="É necessário ter o cargo de gerente para validar as informações" disabled>
               </c:otherwise>
           </c:choose>
           <a href="../index.jsp"><input type="button" value="Voltar" class="btn" id="voltar"></a>
           <a href="../forms/ficha11.jsp"><input type="button" value="Adicionar" class="btn"></a>
         </div>
       </div>
-      <br><br>
       <div>
           <c:forEach var="taxa" items="${taxas}">
               <p>${taxa}</p>
           </c:forEach>
       </div>
+              <div class="filtro-container" style="width: 95%; margin: 0 auto 20px auto; background-color: #f4f4f4; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+            <form action="ficha11.jsp" method="GET" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                
+                <input type="hidden" name="resposta-participacao" id="inputTipoParticipacao" value="<%= request.getParameter("resposta-participacao") != null ? request.getParameter("resposta-participacao") : "menor-que-10" %>">
+
+                <div class="div-opcoes" style="display: flex; align-items: center;">
+                    <label for="anoFiltro" style="font-weight: bold; color: #0038a8; margin-right: 5px;">Ano:</label>
+                    <select name="anoFiltro" id="anoFiltro" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: auto; margin: 0;">
+                        <option value="todos">Todos</option>
+                        <c:forEach items="${anosDisponiveis}" var="ano">
+                            <option value="${ano}" ${param.anoFiltro == ano.toString() ? 'selected' : ''}>${ano}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <div class="div-opcoes" style="display: flex; align-items: center;">
+                    <label for="trimestreFiltro" style="font-weight: bold; color: #0038a8; margin-right: 5px;">Trimestre:</label>
+                    <select name="trimestreFiltro" id="trimestreFiltro" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: auto; margin: 0;">
+                        <option value="todos">Todos</option>
+                        <c:forEach items="${trimestresDisponiveis}" var="trim">
+                            <option value="${trim}" ${param.trimestreFiltro == trim.toString() ? 'selected' : ''}>${trim}º Trimestre</option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <div class="div-opcoes" id="blocoEmpresa" style="display: none; align-items: center;">
+                    <label for="empresaFiltro" style="font-weight: bold; color: #0038a8; margin-right: 5px;">Empresa:</label>
+                    <select name="empresaFiltro" id="empresaFiltro" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: auto; margin: 0; max-width: 250px;">
+                        <option value="todos">Todas</option>
+                        <c:forEach items="${empresaController.listarEmpresas()}" var="emp">
+                            <option value="${emp.id}" ${param.empresaFiltro == emp.id.toString() ? 'selected' : ''}>${emp.nome}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn" style="margin: 0; height: 40px; background-color: #0038a8; color: white;">Filtrar</button>
+                
+                <% if ((anoFiltro != null && !anoFiltro.equals("todos")) || 
+                       (trimestreFiltro != null && !trimestreFiltro.equals("todos")) ||
+                       (empresaFiltro != null && !empresaFiltro.equals("todos"))) { %>
+                    <a href="ficha11.jsp" style="text-decoration: none; color: #b5131d; font-weight: bold; margin-left: 10px;">Limpar Filtro</a>
+                <% } %>
+            </form>
+        </div>
       <div class="opcoes-ficha-container">
         <p>Porcentagem de poder de voto na empresa:</p>
         <br>
@@ -112,7 +148,7 @@
             <th>Última atualização</th>
             <th>Funcionário</th>
           </tr>
-          <c:forEach items="${ficha11MenorController.getAllFichas()}" var="ficha">
+          <c:forEach items="${listaFichasMenor}" var="ficha">
               <tr>
                 <td>${ficha.getStatus().getStatus()}</td>
                 <td class="opcoes-col">
@@ -176,7 +212,7 @@
             <th>Última atualização</th>
             <th>Funcionário</th>
           </tr>
-          <c:forEach items="${ficha11MaiorController.getAllFichas()}" var="ficha">
+          <c:forEach items="${listaFichasMaior}" var="ficha">
               <tr>
                 <td>${ficha.getStatus().getStatus()}</td>
                 <td class="opcoes-col">
@@ -309,6 +345,26 @@
     <script src="/ProjetoCBE/resources/js/CalcularDiferenca.js"></script>
     <script src="/ProjetoCBE/resources/js/validacao.js"></script>
     <script src="/ProjetoCBE/resources/js/delecao.js"></script>
-    <script src="/ProjetoCBE/resources/js/temas.js"></script> 
+    <script src="/ProjetoCBE/resources/js/temas.js"></script>
+    <script>
+    $(document).ready(function() {
+        function checarFiltroEmpresa() {
+            var tipoMarcado = $('input[name="resposta-participacao"]:checked').val() || $('#inputTipoParticipacao').val();
+            if (tipoMarcado === 'maior-que-10') {
+                $('#blocoEmpresa').css('display', 'flex');
+            } else {
+                $('#blocoEmpresa').hide();
+                $('#empresaFiltro').val('todos'); 
+            }
+        }
+        checarFiltroEmpresa(); // Roda ao abrir a tela
+        
+        // Roda sempre que o usuário clicar na bolinha do seu filtro original de Maior/Menor
+        $('input[name="resposta-participacao"]').on('change', function() {
+            $('#inputTipoParticipacao').val($(this).val());
+            checarFiltroEmpresa();
+        });
+    });
+    </script>
   </body>
 </html>

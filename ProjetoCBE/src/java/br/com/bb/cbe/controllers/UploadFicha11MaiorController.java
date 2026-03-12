@@ -84,19 +84,18 @@ public class UploadFicha11MaiorController extends HttpServlet {
 
                     // 5. Controla Outras
                     boolean controlaOutras = "SIM".equalsIgnoreCase(formatter.formatCellValue(row.getCell(4)).trim());
-
-                    // Leitura dos Valores Numéricos
-                    double valorEmpresa = lerNumero(formatter, row.getCell(5));
-                    double patrimonioTotal = lerNumero(formatter, row.getCell(6));
-                    double percCapital = lerNumero(formatter, row.getCell(7));
-                    double percVoto = lerNumero(formatter, row.getCell(8));
-                    double ativo = lerNumero(formatter, row.getCell(9));
-                    double passivo = lerNumero(formatter, row.getCell(10));
-                    double valorLucroPrej = lerNumero(formatter, row.getCell(11));
-                    double resNaoRecorrentes = lerNumero(formatter, row.getCell(12));
-                    double resReavaliacoes = lerNumero(formatter, row.getCell(13));
-                    double resVarCambial = lerNumero(formatter, row.getCell(14));
-                    double lucroDistribuido = lerNumero(formatter, row.getCell(15));
+                    
+                    double valorEmpresa = parseDoubleSeguro(formatter.formatCellValue(row.getCell(5)));
+                    double patrimonioTotal = parseDoubleSeguro(formatter.formatCellValue(row.getCell(6)));
+                    double percCapital = parseDoubleSeguro(formatter.formatCellValue(row.getCell(7)));
+                    double percVoto = parseDoubleSeguro(formatter.formatCellValue(row.getCell(8)));
+                    double ativo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(9)));
+                    double passivo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(10)));
+                    double valorLucroPrej = parseDoubleSeguro(formatter.formatCellValue(row.getCell(11)));
+                    double resNaoRecorrentes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(12)));
+                    double resReavaliacoes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(13)));
+                    double resVarCambial = parseDoubleSeguro(formatter.formatCellValue(row.getCell(14)));
+                    double lucroDistribuido = parseDoubleSeguro(formatter.formatCellValue(row.getCell(15)));
 
                     Map<String, Object> item = new HashMap<>();
                     item.put("id_empresa", idEmpresa);
@@ -166,4 +165,30 @@ private int buscarIdEmpresa(Connection conn, String nome) throws SQLException {
         v = v.replace(".", "").replace(",", ".");
         try { return Double.parseDouble(v); } catch (Exception e) { return 0.0; }
     }
+
+    private double parseDoubleSeguro(String valorStr) {
+        if (valorStr == null || valorStr.trim().isEmpty()) {
+            return -0.01; // Retorna -0.01 se a célula estiver em branco
+        }
+        
+        // Tira mensagens da UPE ou textos genéricos
+        String valorLimpo = valorStr.toUpperCase().replace("VALOR PL INFO COGER", "").trim();
+        if (valorLimpo.isEmpty() || valorLimpo.equals("-")) {
+            return -0.01;
+        }
+
+        try {
+            // Remove R$, % e formata padrão BR para US
+            valorLimpo = valorLimpo.replace("R$", "").replace("%", "").trim();
+            if (valorLimpo.contains(",") && valorLimpo.contains(".")) {
+                valorLimpo = valorLimpo.replace(".", "").replace(",", ".");
+            } else if (valorLimpo.contains(",")) {
+                valorLimpo = valorLimpo.replace(",", ".");
+            }
+            return Double.parseDouble(valorLimpo);
+        } catch (NumberFormatException e) {
+            return -0.01; // Se digitar qualquer outra palavra não reconhecida, salva como não preenchido
+        }
+    }
+    
 }

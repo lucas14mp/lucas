@@ -141,6 +141,10 @@ function atualizarTabelaMaior() {
     var isUpe = $('#selectUpe').val() === 'sim';
     
     function f(val) {
+        // Se for vazio, nulo ou o código de "não preenchido" (-0.01)
+        if (val === null || val === undefined || val === '' || val === -0.01 || val === "-0.01") {
+            return "-";
+        }
         return parseFloat(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     

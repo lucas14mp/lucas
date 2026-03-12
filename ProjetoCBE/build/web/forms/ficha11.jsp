@@ -332,7 +332,7 @@
                                             <td>0,00</td>
                                         </tr>
 
-                                        <c:if test="${uor_equipe == '315118' || uor_equipe == '284073' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
+                                        <c:if test="${uor_equipe == '315118' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
                                             <tr>
                                                 <td>BB Cayman Islands Holding Inc.</td>
                                                 <td>NÃO</td>
@@ -392,7 +392,7 @@
                                     </tbody>
                                 </table>
 
-                                <c:if test="${uor_equipe == '315118' || uor_equipe == '284073' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
+                                <c:if test="${uor_equipe == '315118' || chave == 't1092011' || chave == 'T1091905' || uor_equipe == '9510' || uor_equipe == '283575'}">
                                     <div style="padding: 10px; background-color: #fdfdfd; font-size: 12px; color: #555; border-top: 1px solid #ccc;">
                                         <b><i class="bi bi-lightbulb-fill" style="color: #ffc107;"></i> Nota:</b> No preenchimento da <b>UPE</b>, os valores financeiros podem conter textos indicativos (ex: <i>"VALOR PL INFO COGER"</i>) ou ficarem em branco, pois a COGER completará os dados posteriormente. Não digite símbolos de moeda ("R$") nem porcentagem ("%") no arquivo Excel.
                                     </div>

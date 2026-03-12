@@ -21,8 +21,8 @@ public class FiltroAutenticacao implements Filter {
 
         HttpSession session = req.getSession();
         //comentar as duas linhas abaixo antes de commitar/subir no server MATRICULA FELIPE: t1092011 MATRICuLA GABRIEL: T1092407
-        session.setAttribute("chave", "F0738318");
-        session.setAttribute("uorEquipe", "283575");
+        session.setAttribute("chave", "F8595462");;
+        session.setAttribute("uorEquipe", "284073");
         String chaveFuncionario = (String) session.getAttribute("chave");
         String uri = req.getRequestURI();
         if (chaveFuncionario != null) {

@@ -849,4 +849,88 @@ public class Ficha11MaiorDAO {
         }
     }
     
+    public static List<Integer> getAnosExistentes() {
+        List<Integer> anos = new ArrayList<>();
+        String sql = "SELECT DISTINCT YEAR(data_criacao) AS ano FROM ficha11_participacao_maior ORDER BY ano DESC";
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql); ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) { anos.add(rs.getInt("ano")); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return anos;
+    }
+
+    public static List<Integer> getTrimestresExistentes() {
+        List<Integer> trims = new ArrayList<>();
+        String sql = "SELECT DISTINCT trimestre FROM ficha11_participacao_maior ORDER BY trimestre DESC";
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql); ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) { trims.add(rs.getInt("trimestre")); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return trims;
+    }
+
+    public static List<Ficha11Maior> readComFiltros(String trimestre, String ano, String idEmpresa) {
+        List<Ficha11Maior> fichas = new ArrayList<>();
+        
+        // Instancia os controllers que buscam os objetos relacionados (igual no seu getAllFichas)
+        MoedaController moedaController = new MoedaController();
+        EmpresaController empresaController = new EmpresaController();
+        FuncionarioController funcionarioController = new FuncionarioController();
+        StatusController statusController = new StatusController();
+
+        // Monta o SQL dinamicamente baseando-se no que foi preenchido
+        StringBuilder sql = new StringBuilder(
+            "SELECT f.* FROM ficha11_participacao_maior f " +
+            "WHERE f.id IS NOT NULL "
+        );
+
+        boolean temTrimestre = (trimestre != null && !trimestre.isEmpty() && !trimestre.equals("todos"));
+        boolean temAno = (ano != null && !ano.isEmpty() && !ano.equals("todos"));
+        boolean temEmpresa = (idEmpresa != null && !idEmpresa.isEmpty() && !idEmpresa.equals("todos"));
+
+        if (temTrimestre) sql.append(" AND f.trimestre = ? ");
+        if (temAno) sql.append(" AND YEAR(f.data_criacao) = ? ");
+        if (temEmpresa) sql.append(" AND f.id_empresa = ? ");
+        
+        sql.append(" ORDER BY f.data_criacao DESC");
+
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql.toString())) {
+            int p = 1;
+            if (temTrimestre) pst.setInt(p++, Integer.parseInt(trimestre));
+            if (temAno) pst.setInt(p++, Integer.parseInt(ano));
+            if (temEmpresa) pst.setInt(p++, Integer.parseInt(idEmpresa));
+
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    Ficha11Maior ficha = new Ficha11Maior();
+                    ficha.setId(rs.getInt("id"));
+                    ficha.setPossuiCotacaoEmBolsa(rs.getBoolean("possui_cotacao_em_bolsa"));
+                    ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
+                    ficha.setValorEmpresa(rs.getDouble("valor_empresa"));
+                    ficha.setPatrimonioTotal(rs.getDouble("patrimonio_total"));
+                    ficha.setPorcentoParticipacaoCapital(rs.getDouble("participacao_capital_social"));
+                    ficha.setPorcentoPoderVoto(rs.getDouble("porcento_poder_voto"));
+                    ficha.setAtivoDatabase(rs.getDouble("ativo_database"));
+                    ficha.setPassivoExigivel(rs.getDouble("passivo_exigivel"));
+                    ficha.setValorTotalLucroPrejuizo(rs.getDouble("valor_total_lucro_preju_liquido"));
+                    ficha.setResultadoLiquidoItensNaoRecorrentes(rs.getDouble("result_liq_itens_nao_recorrentes"));
+                    ficha.setResultadoLiquidoReavaliacoes(rs.getDouble("result_liq_reavaliacoes"));
+                    ficha.setResultadoLiquidoVariacaoCambial(rs.getDouble("result_liq_variacao_cambial"));
+                    ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
+                    ficha.setControlaEmpresa(rs.getBoolean("controla_empresas"));
+                    
+                    // Preenche os objetos usando os controllers
+                    ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
+                    ficha.setEmpresa(empresaController.getEmpresaById(rs.getInt("id_empresa")));
+                    ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
+                    ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                    
+                    ficha.setDataCriacao(rs.getDate("data_criacao"));
+                    ficha.setTrimestre(rs.getInt("trimestre"));
+                    
+                    fichas.add(ficha);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return fichas;
+    }
+    
 }

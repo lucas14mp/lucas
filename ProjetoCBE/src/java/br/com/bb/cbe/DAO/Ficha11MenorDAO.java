@@ -413,4 +413,73 @@ public static void createBatch(List<Ficha11Menor> listaFichas) throws SQLExcepti
         }
         return precisaJustificar;
     }
+    
+    public static List<Integer> getAnosExistentes() {
+        List<Integer> anos = new ArrayList<>();
+        String sql = "SELECT DISTINCT YEAR(data_criacao) AS ano FROM ficha11_participacao_menor ORDER BY ano DESC";
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql); ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) { anos.add(rs.getInt("ano")); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return anos;
+    }
+
+    public static List<Integer> getTrimestresExistentes() {
+        List<Integer> trims = new ArrayList<>();
+        String sql = "SELECT DISTINCT trimestre FROM ficha11_participacao_menor ORDER BY trimestre DESC";
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql); ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) { trims.add(rs.getInt("trimestre")); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return trims;
+    }
+
+    public static List<Ficha11Menor> readComFiltros(String trimestre, String ano) {
+        List<Ficha11Menor> fichas = new ArrayList<>();
+        
+        // 1. Instanciamos os controllers necessários aqui dentro (A causa do erro)
+        MoedaController moedaController = new MoedaController();
+        PaisController paisController = new PaisController();
+        FuncionarioController funcionarioController = new FuncionarioController();
+        StatusController statusController = new StatusController();
+
+        // 2. Mudamos para f.* para não dar conflito de ID
+        StringBuilder sql = new StringBuilder(
+            "SELECT f.* FROM ficha11_participacao_menor f WHERE 1=1 "
+        );
+
+        boolean temTrimestre = (trimestre != null && !trimestre.isEmpty() && !trimestre.equals("todos"));
+        boolean temAno = (ano != null && !ano.isEmpty() && !ano.equals("todos"));
+
+        if (temTrimestre) sql.append(" AND f.trimestre = ? ");
+        if (temAno) sql.append(" AND YEAR(f.data_criacao) = ? ");
+        sql.append(" ORDER BY f.data_criacao DESC");
+
+        try (Connection con = Conexao.conectar(); PreparedStatement pst = con.prepareStatement(sql.toString())) {
+            int p = 1;
+            if (temTrimestre) pst.setInt(p++, Integer.parseInt(trimestre));
+            if (temAno) pst.setInt(p++, Integer.parseInt(ano));
+
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    // 3. Declaramos a variável e adicionamos os dados
+                    Ficha11Menor ficha = new Ficha11Menor();
+                    ficha.setId(rs.getInt("id"));
+                    ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
+                    ficha.setValorParticipacao(rs.getDouble("valor_participacao"));
+                    ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
+                    ficha.setDataCriacao(rs.getDate("data_criacao"));
+                    ficha.setTrimestre(rs.getInt("trimestre"));
+                    ficha.setPais(paisController.getPaisById(rs.getInt("id_pais")));
+                    ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
+                    ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
+                    ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                    ficha.setJustificativaGestor(rs.getString("justificativa_gestor"));
+                    
+                    // 4. Adicionamos na lista local correta
+                    fichas.add(ficha);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return fichas;
+    }
+    
 }

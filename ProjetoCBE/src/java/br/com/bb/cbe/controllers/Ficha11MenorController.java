@@ -449,4 +449,16 @@ public class Ficha11MenorController extends HttpServlet {
         }
     }
     
+    public List<Integer> getAnosExistentes() {
+        return Ficha11MenorDAO.getAnosExistentes();
+    }
+
+    public List<Integer> getTrimestresExistentes() {
+        return Ficha11MenorDAO.getTrimestresExistentes();
+    }
+
+    public List<Ficha11Menor> readComFiltros(String trimestre, String ano) {
+        return Ficha11MenorDAO.readComFiltros(trimestre, ano);
+    }
+    
 }

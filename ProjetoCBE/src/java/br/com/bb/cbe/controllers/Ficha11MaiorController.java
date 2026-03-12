@@ -889,4 +889,17 @@ private void salvarLote(JsonObject json, String chaveFuncionario) throws Excepti
             Ficha11MaiorDAO.sincronizarValoresCogerParaUpe(f.getEmpresa().getId(), f.getTrimestre(), anoFicha);
         }
     }
+
+    public List<Integer> getAnosExistentes() {
+        return Ficha11MaiorDAO.getAnosExistentes();
+    }
+
+    public List<Integer> getTrimestresExistentes() {
+        return Ficha11MaiorDAO.getTrimestresExistentes();
+    }
+
+    public List<Ficha11Maior> readComFiltros(String trimestre, String ano, String idEmpresa) {
+        return Ficha11MaiorDAO.readComFiltros(trimestre, ano, idEmpresa);
+    }
+
 }
