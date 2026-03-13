@@ -119,7 +119,7 @@ public class Ficha11MaiorController extends HttpServlet {
             if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
 
                 int idMoeda;
-                if (req.getParameter("moeda").isEmpty()) {
+                if (req.getParameter("moeda") == null || req.getParameter("moeda").isEmpty()) {
                     ficha.setMoeda(moedaController.getMoedaById(15));
                 } else {
                     idMoeda = Integer.parseInt(req.getParameter("moeda"));
@@ -129,24 +129,30 @@ public class Ficha11MaiorController extends HttpServlet {
                 int idEmpresa = Integer.parseInt(req.getParameter("empresa"));
                 ficha.setEmpresa(empresaController.getEmpresaById(idEmpresa));
 
-                ficha.setPossuiCotacaoEmBolsa(Boolean.parseBoolean(req.getParameter("cotacao")));
-                if (req.getParameter("valoracao").isEmpty()) {
+                // Agora usa getParameter vazio para retornar null se necessário
+                ficha.setPossuiCotacaoEmBolsa(req.getParameter("cotacao") != null && !req.getParameter("cotacao").isEmpty() ? Boolean.parseBoolean(req.getParameter("cotacao")) : null);
+                
+                if (req.getParameter("valoracao") == null || req.getParameter("valoracao").isEmpty()) {
                     ficha.setMetodoValoracao("Não informado");
                 } else {
                     ficha.setMetodoValoracao(req.getParameter("valoracao"));
                 }
-                ficha.setValorEmpresa(NumeroUtils.stringToDouble(req.getParameter("valorDataBase")));
-                ficha.setPatrimonioTotal(NumeroUtils.stringToDouble(req.getParameter("patrimonioLiquido")));
-                ficha.setPorcentoParticipacaoCapital(NumeroUtils.stringToDouble(req.getParameter("porcentagemSocial")));
-                ficha.setPorcentoPoderVoto(NumeroUtils.stringToDouble(req.getParameter("porcentagemVoto")));
-                ficha.setAtivoDatabase(NumeroUtils.stringToDouble(req.getParameter("ativoDataBase")));
-                ficha.setPassivoExigivel(NumeroUtils.stringToDouble(req.getParameter("passivoExigivel")));
-                ficha.setValorTotalLucroPrejuizo(NumeroUtils.stringToDouble(req.getParameter("valorTotal")));
-                ficha.setResultadoLiquidoItensNaoRecorrentes(NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoItens")));
-                ficha.setResultadoLiquidoReavaliacoes(NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoReavaliacoes")));
-                ficha.setResultadoLiquidoVariacaoCambial(NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoCambial")));
-                ficha.setLucroDistribuido(NumeroUtils.stringToDouble(req.getParameter("lucroDistribuido")));
-                ficha.setControlaEmpresa(Boolean.parseBoolean(req.getParameter("controla")));
+
+                // Lê com segurança: Se estiver vazio, passa null para o Bean
+                ficha.setValorEmpresa(req.getParameter("valorDataBase") != null && !req.getParameter("valorDataBase").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("valorDataBase")) : null);
+                ficha.setPatrimonioTotal(req.getParameter("patrimonioLiquido") != null && !req.getParameter("patrimonioLiquido").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("patrimonioLiquido")) : null);
+                ficha.setPorcentoParticipacaoCapital(req.getParameter("porcentagemSocial") != null && !req.getParameter("porcentagemSocial").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("porcentagemSocial")) : null);
+                ficha.setPorcentoPoderVoto(req.getParameter("porcentagemVoto") != null && !req.getParameter("porcentagemVoto").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("porcentagemVoto")) : null);
+                ficha.setAtivoDatabase(req.getParameter("ativoDataBase") != null && !req.getParameter("ativoDataBase").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("ativoDataBase")) : null);
+                ficha.setPassivoExigivel(req.getParameter("passivoExigivel") != null && !req.getParameter("passivoExigivel").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("passivoExigivel")) : null);
+                ficha.setValorTotalLucroPrejuizo(req.getParameter("valorTotal") != null && !req.getParameter("valorTotal").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("valorTotal")) : null);
+                ficha.setResultadoLiquidoItensNaoRecorrentes(req.getParameter("resultadoLiquidoItens") != null && !req.getParameter("resultadoLiquidoItens").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoItens")) : null);
+                ficha.setResultadoLiquidoReavaliacoes(req.getParameter("resultadoLiquidoReavaliacoes") != null && !req.getParameter("resultadoLiquidoReavaliacoes").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoReavaliacoes")) : null);
+                ficha.setResultadoLiquidoVariacaoCambial(req.getParameter("resultadoLiquidoCambial") != null && !req.getParameter("resultadoLiquidoCambial").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("resultadoLiquidoCambial")) : null);
+                ficha.setLucroDistribuido(req.getParameter("lucroDistribuido") != null && !req.getParameter("lucroDistribuido").isEmpty() ? NumeroUtils.stringToDouble(req.getParameter("lucroDistribuido")) : null);
+                
+                ficha.setControlaEmpresa(req.getParameter("controla") != null && !req.getParameter("controla").isEmpty() ? Boolean.parseBoolean(req.getParameter("controla")) : null);
+                
                 ficha.setTrimestre(DataUtils.validaTrimestre());
                 ficha.setDataCriacao(new Date());
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
@@ -288,7 +294,8 @@ public class Ficha11MaiorController extends HttpServlet {
                     return;
             }
             if (tipoRequisicao.equals("post") || tipoRequisicao.equals("edit")) {
-                if (ficha.isControlaEmpresa()) {
+                // Checa se o valor não é nulo E se é verdadeiro
+                if (ficha.getControlaEmpresa() != null && ficha.getControlaEmpresa()) {
                     if (tipoRequisicao.equals("post")) {
                         resp.sendRedirect("/ProjetoCBE/forms/ficha11Empresa.jsp?id=" + idFicha);
                         return;
@@ -297,6 +304,8 @@ public class Ficha11MaiorController extends HttpServlet {
                     return;
                 }
             }
+            
+            resp.sendRedirect("/ProjetoCBE/views/ficha11.jsp");
             
             resp.sendRedirect("/ProjetoCBE/views/ficha11.jsp");
         } catch (NumberFormatException e) {
@@ -579,7 +588,6 @@ public class Ficha11MaiorController extends HttpServlet {
             tempFicha.setDataCriacao(new Date());
             tempFicha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
             tempFicha.setStatus(statusController.getStatusById(1)); // 1 - não certificado / 2 - certificado
-            System.out.println("FICHAS " + tempFicha.isControlaEmpresa());
             fichas.add(tempFicha);          
         }
         return fichas;
@@ -714,7 +722,6 @@ public class Ficha11MaiorController extends HttpServlet {
         tempFicha.setDataCriacao(new Date());
         tempFicha.setFuncionario(funcionarioController.getFuncionarioByChave(chaveFuncionario));
         tempFicha.setStatus(statusController.getStatusById(1)); // 1 - não certificado / 2 - certificado
-        System.out.println("FICHAS " + tempFicha.isControlaEmpresa());
         fichas.add(tempFicha);
         }
     return fichas;
@@ -843,23 +850,30 @@ private void salvarLote(JsonObject json, String chaveFuncionario) throws Excepti
             Ficha11Maior f = new Ficha11Maior();
 
             // IDs e Mapeamento
-            Empresa emp = new Empresa(); emp.setId(item.get("id_empresa").getAsInt()); f.setEmpresa(emp);
-            Moeda m = new Moeda(); m.setId(item.get("id_moeda").getAsInt()); f.setMoeda(m);
+            Empresa emp = new Empresa(); 
+            emp.setId(item.has("id_empresa") && !item.get("id_empresa").isJsonNull() ? item.get("id_empresa").getAsInt() : 0); 
+            f.setEmpresa(emp);
+            
+            Moeda m = new Moeda(); 
+            m.setId(item.has("id_moeda") && !item.get("id_moeda").isJsonNull() ? item.get("id_moeda").getAsInt() : 0); 
+            f.setMoeda(m);
 
-            f.setPossuiCotacaoEmBolsa(item.get("possui_cotacao_em_bolsa").getAsBoolean());
-            f.setMetodoValoracao(item.get("metodo_valoracao").getAsString());
-            f.setControlaEmpresa(item.get("controla_empresas").getAsBoolean());
-            f.setValorEmpresa(item.get("valor_empresa").getAsDouble());
-            f.setPatrimonioTotal(item.get("patrimonio_total").getAsDouble());
-            f.setPorcentoParticipacaoCapital(item.get("participacao_capital_social").getAsDouble());
-            f.setPorcentoPoderVoto(item.get("porcento_poder_voto").getAsDouble());
-            f.setAtivoDatabase(item.get("ativo_database").getAsDouble());
-            f.setPassivoExigivel(item.get("passivo_exigivel").getAsDouble());
-            f.setValorTotalLucroPrejuizo(item.get("valor_total_lucro_preju_liquido").getAsDouble());
-            f.setResultadoLiquidoItensNaoRecorrentes(item.get("result_liq_itens_nao_recorrentes").getAsDouble());
-            f.setResultadoLiquidoReavaliacoes(item.get("result_liq_reavaliacoes").getAsDouble());
-            f.setResultadoLiquidoVariacaoCambial(item.get("result_liq_variacao_cambial").getAsDouble());
-            f.setLucroDistribuido(item.get("lucro_distribuido").getAsDouble());
+            // Validação blindada: Só lê o JSON se a chave existir dentro dele
+            f.setPossuiCotacaoEmBolsa(item.has("possui_cotacao_em_bolsa") && !item.get("possui_cotacao_em_bolsa").isJsonNull() ? item.get("possui_cotacao_em_bolsa").getAsBoolean() : null);
+            f.setMetodoValoracao(item.has("metodo_valoracao") && !item.get("metodo_valoracao").isJsonNull() ? item.get("metodo_valoracao").getAsString() : null);
+            f.setControlaEmpresa(item.has("controla_empresas") && !item.get("controla_empresas").isJsonNull() ? item.get("controla_empresas").getAsBoolean() : null);
+            
+            f.setValorEmpresa(item.has("valor_empresa") && !item.get("valor_empresa").isJsonNull() ? item.get("valor_empresa").getAsDouble() : null);
+            f.setPatrimonioTotal(item.has("patrimonio_total") && !item.get("patrimonio_total").isJsonNull() ? item.get("patrimonio_total").getAsDouble() : null);
+            f.setPorcentoParticipacaoCapital(item.has("participacao_capital_social") && !item.get("participacao_capital_social").isJsonNull() ? item.get("participacao_capital_social").getAsDouble() : null);
+            f.setPorcentoPoderVoto(item.has("porcento_poder_voto") && !item.get("porcento_poder_voto").isJsonNull() ? item.get("porcento_poder_voto").getAsDouble() : null);
+            f.setAtivoDatabase(item.has("ativo_database") && !item.get("ativo_database").isJsonNull() ? item.get("ativo_database").getAsDouble() : null);
+            f.setPassivoExigivel(item.has("passivo_exigivel") && !item.get("passivo_exigivel").isJsonNull() ? item.get("passivo_exigivel").getAsDouble() : null);
+            f.setValorTotalLucroPrejuizo(item.has("valor_total_lucro_preju_liquido") && !item.get("valor_total_lucro_preju_liquido").isJsonNull() ? item.get("valor_total_lucro_preju_liquido").getAsDouble() : null);
+            f.setResultadoLiquidoItensNaoRecorrentes(item.has("result_liq_itens_nao_recorrentes") && !item.get("result_liq_itens_nao_recorrentes").isJsonNull() ? item.get("result_liq_itens_nao_recorrentes").getAsDouble() : null);
+            f.setResultadoLiquidoReavaliacoes(item.has("result_liq_reavaliacoes") && !item.get("result_liq_reavaliacoes").isJsonNull() ? item.get("result_liq_reavaliacoes").getAsDouble() : null);
+            f.setResultadoLiquidoVariacaoCambial(item.has("result_liq_variacao_cambial") && !item.get("result_liq_variacao_cambial").isJsonNull() ? item.get("result_liq_variacao_cambial").getAsDouble() : null);
+            f.setLucroDistribuido(item.has("lucro_distribuido") && !item.get("lucro_distribuido").isJsonNull() ? item.get("lucro_distribuido").getAsDouble() : null);
 
             // Controle
             f.setTrimestre(trimestreAtual);

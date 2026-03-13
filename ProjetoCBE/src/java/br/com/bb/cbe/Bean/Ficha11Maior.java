@@ -5,20 +5,20 @@ import java.util.Date;
 public class Ficha11Maior {
 
     private int id;
-    private boolean possuiCotacaoEmBolsa;
+    private Boolean possuiCotacaoEmBolsa;
     private String metodoValoracao;
-    private double valorEmpresa;
-    private double patrimonioTotal;
-    private double porcentoParticipacaoCapital;
-    private double porcentoPoderVoto;
-    private double ativoDatabase;
-    private double passivoExigivel;
-    private double valorTotalLucroPrejuizo;
-    private double resultadoLiquidoItensNaoRecorrentes;
-    private double resultadoLiquidoReavaliacoes;
-    private double resultadoLiquidoVariacaoCambial;
-    private double lucroDistribuido;
-    private boolean controlaEmpresa;
+    private Double valorEmpresa;
+    private Double patrimonioTotal;
+    private Double porcentoParticipacaoCapital;
+    private Double porcentoPoderVoto;
+    private Double ativoDatabase;
+    private Double passivoExigivel;
+    private Double valorTotalLucroPrejuizo;
+    private Double resultadoLiquidoItensNaoRecorrentes;
+    private Double resultadoLiquidoReavaliacoes;
+    private Double resultadoLiquidoVariacaoCambial;
+    private Double lucroDistribuido;
+    private Boolean controlaEmpresa;
     private Date dataCriacao;
     private int trimestre;
     private Moeda moeda;
@@ -27,8 +27,8 @@ public class Ficha11Maior {
     private Status status;
     private String diretoria;
     private String justificativaGestor;
-
-    public Ficha11Maior() {
+    
+        public Ficha11Maior() {
 
     }
 
@@ -40,11 +40,11 @@ public class Ficha11Maior {
         this.id = id;
     }
 
-    public boolean isPossuiCotacaoEmBolsa() {
+    public Boolean getPossuiCotacaoEmBolsa() {
         return possuiCotacaoEmBolsa;
     }
 
-    public void setPossuiCotacaoEmBolsa(boolean possuiCotacaoEmBolsa) {
+    public void setPossuiCotacaoEmBolsa(Boolean possuiCotacaoEmBolsa) {
         this.possuiCotacaoEmBolsa = possuiCotacaoEmBolsa;
     }
 
@@ -56,99 +56,99 @@ public class Ficha11Maior {
         this.metodoValoracao = metodoValoracao;
     }
 
-    public double getValorEmpresa() {
+    public Double getValorEmpresa() {
         return valorEmpresa;
     }
 
-    public void setValorEmpresa(double valorEmpresa) {
+    public void setValorEmpresa(Double valorEmpresa) {
         this.valorEmpresa = valorEmpresa;
     }
 
-    public double getPatrimonioTotal() {
+    public Double getPatrimonioTotal() {
         return patrimonioTotal;
     }
 
-    public void setPatrimonioTotal(double patrimonioTotal) {
+    public void setPatrimonioTotal(Double patrimonioTotal) {
         this.patrimonioTotal = patrimonioTotal;
     }
 
-    public double getPorcentoParticipacaoCapital() {
+    public Double getPorcentoParticipacaoCapital() {
         return porcentoParticipacaoCapital;
     }
 
-    public void setPorcentoParticipacaoCapital(double porcentoParticipacaoCapital) {
+    public void setPorcentoParticipacaoCapital(Double porcentoParticipacaoCapital) {
         this.porcentoParticipacaoCapital = porcentoParticipacaoCapital;
     }
 
-    public double getPorcentoPoderVoto() {
+    public Double getPorcentoPoderVoto() {
         return porcentoPoderVoto;
     }
 
-    public void setPorcentoPoderVoto(double porcentoPoderVoto) {
+    public void setPorcentoPoderVoto(Double porcentoPoderVoto) {
         this.porcentoPoderVoto = porcentoPoderVoto;
     }
 
-    public double getAtivoDatabase() {
+    public Double getAtivoDatabase() {
         return ativoDatabase;
     }
 
-    public void setAtivoDatabase(double ativoDatabase) {
+    public void setAtivoDatabase(Double ativoDatabase) {
         this.ativoDatabase = ativoDatabase;
     }
 
-    public double getPassivoExigivel() {
+    public Double getPassivoExigivel() {
         return passivoExigivel;
     }
 
-    public void setPassivoExigivel(double passivoExigivel) {
+    public void setPassivoExigivel(Double passivoExigivel) {
         this.passivoExigivel = passivoExigivel;
     }
 
-    public double getValorTotalLucroPrejuizo() {
+    public Double getValorTotalLucroPrejuizo() {
         return valorTotalLucroPrejuizo;
     }
 
-    public void setValorTotalLucroPrejuizo(double valorTotalLucroPrejuizo) {
+    public void setValorTotalLucroPrejuizo(Double valorTotalLucroPrejuizo) {
         this.valorTotalLucroPrejuizo = valorTotalLucroPrejuizo;
     }
 
-    public double getResultadoLiquidoItensNaoRecorrentes() {
+    public Double getResultadoLiquidoItensNaoRecorrentes() {
         return resultadoLiquidoItensNaoRecorrentes;
     }
 
-    public void setResultadoLiquidoItensNaoRecorrentes(double resultadoLiquidoItensNaoRecorrentes) {
+    public void setResultadoLiquidoItensNaoRecorrentes(Double resultadoLiquidoItensNaoRecorrentes) {
         this.resultadoLiquidoItensNaoRecorrentes = resultadoLiquidoItensNaoRecorrentes;
     }
 
-    public double getResultadoLiquidoReavaliacoes() {
+    public Double getResultadoLiquidoReavaliacoes() {
         return resultadoLiquidoReavaliacoes;
     }
 
-    public void setResultadoLiquidoReavaliacoes(double resultadoLiquidoReavaliacoes) {
+    public void setResultadoLiquidoReavaliacoes(Double resultadoLiquidoReavaliacoes) {
         this.resultadoLiquidoReavaliacoes = resultadoLiquidoReavaliacoes;
     }
 
-    public double getResultadoLiquidoVariacaoCambial() {
+    public Double getResultadoLiquidoVariacaoCambial() {
         return resultadoLiquidoVariacaoCambial;
     }
 
-    public void setResultadoLiquidoVariacaoCambial(double resultadoLiquidoVariacaoCambial) {
+    public void setResultadoLiquidoVariacaoCambial(Double resultadoLiquidoVariacaoCambial) {
         this.resultadoLiquidoVariacaoCambial = resultadoLiquidoVariacaoCambial;
     }
 
-    public double getLucroDistribuido() {
+    public Double getLucroDistribuido() {
         return lucroDistribuido;
     }
 
-    public void setLucroDistribuido(double lucroDistribuido) {
+    public void setLucroDistribuido(Double lucroDistribuido) {
         this.lucroDistribuido = lucroDistribuido;
     }
 
-    public boolean isControlaEmpresa() {
+    public Boolean getControlaEmpresa() {
         return controlaEmpresa;
     }
 
-    public void setControlaEmpresa(boolean controlaEmpresa) {
+    public void setControlaEmpresa(Boolean controlaEmpresa) {
         this.controlaEmpresa = controlaEmpresa;
     }
 
@@ -167,7 +167,7 @@ public class Ficha11Maior {
     public void setTrimestre(int trimestre) {
         this.trimestre = trimestre;
     }
-    
+
     public Moeda getMoeda() {
         return moeda;
     }
@@ -199,11 +199,21 @@ public class Ficha11Maior {
     public void setStatus(Status status) {
         this.status = status;
     }
-    
-    public String getDiretoria() { return diretoria; }
-    public void setDiretoria(String diretoria) { this.diretoria = diretoria; }
-    
-    public String getJustificativaGestor() { return justificativaGestor; }
-    public void setJustificativaGestor(String justificativaGestor) { this.justificativaGestor = justificativaGestor; }
+
+    public String getDiretoria() {
+        return diretoria;
+    }
+
+    public void setDiretoria(String diretoria) {
+        this.diretoria = diretoria;
+    }
+
+    public String getJustificativaGestor() {
+        return justificativaGestor;
+    }
+
+    public void setJustificativaGestor(String justificativaGestor) {
+        this.justificativaGestor = justificativaGestor;
+    }
     
 }

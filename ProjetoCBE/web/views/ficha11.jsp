@@ -238,7 +238,7 @@
                 <td>${ficha.getEmpresa().getNome()}</td>
                 <td>
                   <c:choose>
-                      <c:when test="${ficha.isPossuiCotacaoEmBolsa()}">
+                      <c:when test="${ficha.getPossuiCotacaoEmBolsa() != null && ficha.getPossuiCotacaoEmBolsa()}">
                           Sim
                       </c:when>
                       <c:otherwise>
@@ -250,7 +250,7 @@
                 <td>${ficha.getMetodoValoracao()}</td>
                 <td>
                   <c:choose>
-                      <c:when test="${ficha.isControlaEmpresa()}">
+                      <c:when test="${ficha.getControlaEmpresa() != null && ficha.getControlaEmpresa()}">
                           <p>Sim</p>
                           <a class="option-btn visualizar" title="Visualizar empresas controladas" href="empresas-controladas11.jsp?id=${ficha.getId()}">
                             <img class="option-btn-img" src="../resources/imgs/lupa.png" alt="alt"/>
@@ -261,17 +261,17 @@
                       </c:otherwise>
                   </c:choose>
                 </td>
-                <td>${ficha.getValorEmpresa() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorEmpresa() != -0.01 ? numeroUtils.doubleToString(ficha.getValorEmpresa()) : "Não informado"}</td>
-                <td>${ficha.getPatrimonioTotal() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPatrimonioTotal() != -0.01 ? numeroUtils.doubleToString(ficha.getPatrimonioTotal()) : "Não informado"}</td>
-                <td>${ficha.getPorcentoParticipacaoCapital() != -0.01 ? numeroUtils.doubleToString(ficha.getPorcentoParticipacaoCapital()) : "Não informado"}${ficha.getPorcentoParticipacaoCapital() != -0.01 ? "%" : ""}</td>
-                <td>${ficha.getPorcentoPoderVoto() != -0.01 ? numeroUtils.doubleToString(ficha.getPorcentoPoderVoto()) : "Não informado"}${ficha.getPorcentoPoderVoto() != -0.01 ? "%" : ""}</td>
-                <td>${ficha.getAtivoDatabase() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getAtivoDatabase() != -0.01 ? numeroUtils.doubleToString(ficha.getAtivoDatabase()) : "Não informado"}</td>
-                <td>${ficha.getPassivoExigivel() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPassivoExigivel() != -0.01 ? numeroUtils.doubleToString(ficha.getPassivoExigivel()) : "Não informado"}</td>
-                <td>${ficha.getValorTotalLucroPrejuizo() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorTotalLucroPrejuizo() != -0.01 ? numeroUtils.doubleToString(ficha.getValorTotalLucroPrejuizo()) : "Não informado"}</td>
-                <td>${ficha.getResultadoLiquidoItensNaoRecorrentes() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoItensNaoRecorrentes() != -0.01 ? numeroUtils.doubleToString(ficha.getResultadoLiquidoItensNaoRecorrentes()) : "Não informado"}</td>
-                <td>${ficha.getResultadoLiquidoReavaliacoes() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoReavaliacoes() != -0.01 ? numeroUtils.doubleToString(ficha.getResultadoLiquidoReavaliacoes()) : "Não informado"}</td>
-                <td>${ficha.getResultadoLiquidoVariacaoCambial() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoVariacaoCambial() != -0.01 ? numeroUtils.doubleToString(ficha.getResultadoLiquidoVariacaoCambial()) : "Não informado"}</td>
-                <td>${ficha.getLucroDistribuido() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getLucroDistribuido() != -0.01 ? numeroUtils.doubleToString(ficha.getLucroDistribuido()) : "Não informado"}</td>
+                <td>${ficha.getValorEmpresa() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorEmpresa() != null ? numeroUtils.doubleToString(ficha.getValorEmpresa()) : "-"}</td>
+                <td>${ficha.getPatrimonioTotal() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPatrimonioTotal() != null ? numeroUtils.doubleToString(ficha.getPatrimonioTotal()) : "-"}</td>
+                <td>${ficha.getPorcentoParticipacaoCapital() != null ? numeroUtils.doubleToString(ficha.getPorcentoParticipacaoCapital()) : "-"}${ficha.getPorcentoParticipacaoCapital() != null ? "%" : ""}</td>
+                <td>${ficha.getPorcentoPoderVoto() != null ? numeroUtils.doubleToString(ficha.getPorcentoPoderVoto()) : "-"}${ficha.getPorcentoPoderVoto() != null ? "%" : ""}</td>
+                <td>${ficha.getAtivoDatabase() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getAtivoDatabase() != null ? numeroUtils.doubleToString(ficha.getAtivoDatabase()) : "-"}</td>
+                <td>${ficha.getPassivoExigivel() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPassivoExigivel() != null ? numeroUtils.doubleToString(ficha.getPassivoExigivel()) : "-"}</td>
+                <td>${ficha.getValorTotalLucroPrejuizo() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorTotalLucroPrejuizo() != null ? numeroUtils.doubleToString(ficha.getValorTotalLucroPrejuizo()) : "-"}</td>
+                <td>${ficha.getResultadoLiquidoItensNaoRecorrentes() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoItensNaoRecorrentes() != null ? numeroUtils.doubleToString(ficha.getResultadoLiquidoItensNaoRecorrentes()) : "-"}</td>
+                <td>${ficha.getResultadoLiquidoReavaliacoes() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoReavaliacoes() != null ? numeroUtils.doubleToString(ficha.getResultadoLiquidoReavaliacoes()) : "-"}</td>
+                <td>${ficha.getResultadoLiquidoVariacaoCambial() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getResultadoLiquidoVariacaoCambial() != null ? numeroUtils.doubleToString(ficha.getResultadoLiquidoVariacaoCambial()) : "-"}</td>
+                <td>${ficha.getLucroDistribuido() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getLucroDistribuido() != null ? numeroUtils.doubleToString(ficha.getLucroDistribuido()) : "-"}</td>
                 <td>${dataUtils.formatarData(ficha.getDataCriacao())}</td>
                 <td>
                   ${ficha.getFuncionario().getNome()}

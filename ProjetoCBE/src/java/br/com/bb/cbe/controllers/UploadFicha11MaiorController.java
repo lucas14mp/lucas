@@ -69,8 +69,8 @@ public class UploadFicha11MaiorController extends HttpServlet {
                         throw new Exception("Empresa não encontrada no sistema: " + nomeEmpresa);
                     }
 
-                    // 2. Possui Cotação
-                    boolean possuiCotacao = "SIM".equalsIgnoreCase(formatter.formatCellValue(row.getCell(1)).trim());
+                    // 2. Possui Cotação (Usa o parseBooleanSeguro para permitir NULL)
+                    Boolean possuiCotacao = parseBooleanSeguro(formatter.formatCellValue(row.getCell(1)));
 
                     // 3. Moeda
                     String nomeMoeda = formatter.formatCellValue(row.getCell(2)).trim();
@@ -82,20 +82,21 @@ public class UploadFicha11MaiorController extends HttpServlet {
                     // 4. Método Valoração
                     String metodo = formatter.formatCellValue(row.getCell(3)).trim();
 
-                    // 5. Controla Outras
-                    boolean controlaOutras = "SIM".equalsIgnoreCase(formatter.formatCellValue(row.getCell(4)).trim());
+                    // 5. Controla Outras (Usa o parseBooleanSeguro para permitir NULL)
+                    Boolean controlaOutras = parseBooleanSeguro(formatter.formatCellValue(row.getCell(4)));
                     
-                    double valorEmpresa = parseDoubleSeguro(formatter.formatCellValue(row.getCell(5)));
-                    double patrimonioTotal = parseDoubleSeguro(formatter.formatCellValue(row.getCell(6)));
-                    double percCapital = parseDoubleSeguro(formatter.formatCellValue(row.getCell(7)));
-                    double percVoto = parseDoubleSeguro(formatter.formatCellValue(row.getCell(8)));
-                    double ativo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(9)));
-                    double passivo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(10)));
-                    double valorLucroPrej = parseDoubleSeguro(formatter.formatCellValue(row.getCell(11)));
-                    double resNaoRecorrentes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(12)));
-                    double resReavaliacoes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(13)));
-                    double resVarCambial = parseDoubleSeguro(formatter.formatCellValue(row.getCell(14)));
-                    double lucroDistribuido = parseDoubleSeguro(formatter.formatCellValue(row.getCell(15)));
+                    // Usa os métodos seguros retornando Double (com D maiúsculo) para permitir NULL
+                    Double valorEmpresa = parseDoubleSeguro(formatter.formatCellValue(row.getCell(5)));
+                    Double patrimonioTotal = parseDoubleSeguro(formatter.formatCellValue(row.getCell(6)));
+                    Double percCapital = parseDoubleSeguro(formatter.formatCellValue(row.getCell(7)));
+                    Double percVoto = parseDoubleSeguro(formatter.formatCellValue(row.getCell(8)));
+                    Double ativo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(9)));
+                    Double passivo = parseDoubleSeguro(formatter.formatCellValue(row.getCell(10)));
+                    Double valorLucroPrej = parseDoubleSeguro(formatter.formatCellValue(row.getCell(11)));
+                    Double resNaoRecorrentes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(12)));
+                    Double resReavaliacoes = parseDoubleSeguro(formatter.formatCellValue(row.getCell(13)));
+                    Double resVarCambial = parseDoubleSeguro(formatter.formatCellValue(row.getCell(14)));
+                    Double lucroDistribuido = parseDoubleSeguro(formatter.formatCellValue(row.getCell(15)));
 
                     Map<String, Object> item = new HashMap<>();
                     item.put("id_empresa", idEmpresa);
@@ -126,7 +127,6 @@ public class UploadFicha11MaiorController extends HttpServlet {
                 if(conn != null) Conexao.fecharConexao(conn, null, null);
             }
         } catch (Throwable e) {
-            // Este bloco captura erros críticos e transforma em JSON para a tela não congelar
             e.printStackTrace();
             Map<String, String> erro = new HashMap<>();
             erro.put("erro", e.getMessage() != null ? e.getMessage() : "Erro interno crítico: " + e.toString());
@@ -134,8 +134,7 @@ public class UploadFicha11MaiorController extends HttpServlet {
         }
     }
 
-private int buscarIdEmpresa(Connection conn, String nome) throws SQLException {
-        // CORREÇÃO: Usando id_empresa e nome_empresa baseados no banco real
+    private int buscarIdEmpresa(Connection conn, String nome) throws SQLException {
         String sql = "SELECT id_empresa FROM empresa WHERE nome_empresa = ?"; 
         try (PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setString(1, nome);
@@ -147,7 +146,6 @@ private int buscarIdEmpresa(Connection conn, String nome) throws SQLException {
     }
 
     private int buscarIdMoeda(Connection conn, String nome) throws SQLException {
-        // CORREÇÃO: Usando id_moeda e nome baseados no banco real
         String sql = "SELECT id_moeda FROM moeda WHERE nome = ?";
         try (PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setString(1, nome);
@@ -158,37 +156,27 @@ private int buscarIdEmpresa(Connection conn, String nome) throws SQLException {
         return -1;
     }
 
-    private double lerNumero(DataFormatter f, Cell c) {
-        if (c == null) return 0.0;
-        String v = f.formatCellValue(c).trim().replace("R$", "").replace("%", "").trim();
-        if (v.isEmpty() || v.equals("-")) return 0.0;
-        v = v.replace(".", "").replace(",", ".");
-        try { return Double.parseDouble(v); } catch (Exception e) { return 0.0; }
-    }
-
-    private double parseDoubleSeguro(String valorStr) {
-        if (valorStr == null || valorStr.trim().isEmpty()) {
-            return -0.01; // Retorna -0.01 se a célula estiver em branco
+    private Double parseDoubleSeguro(String valorStr) {
+        if (valorStr == null || valorStr.trim().isEmpty() || valorStr.equals("-") || valorStr.toUpperCase().contains("VALOR PL")) {
+            return null;
         }
-        
-        // Tira mensagens da UPE ou textos genéricos
-        String valorLimpo = valorStr.toUpperCase().replace("VALOR PL INFO COGER", "").trim();
-        if (valorLimpo.isEmpty() || valorLimpo.equals("-")) {
-            return -0.01;
-        }
-
         try {
-            // Remove R$, % e formata padrão BR para US
-            valorLimpo = valorLimpo.replace("R$", "").replace("%", "").trim();
-            if (valorLimpo.contains(",") && valorLimpo.contains(".")) {
-                valorLimpo = valorLimpo.replace(".", "").replace(",", ".");
-            } else if (valorLimpo.contains(",")) {
-                valorLimpo = valorLimpo.replace(",", ".");
+            String val = valorStr.replace("R$", "").replace("%", "").trim();
+            if (val.contains(",") && val.contains(".")) {
+                val = val.replace(".", "").replace(",", ".");
+            } else if (val.contains(",")) {
+                val = val.replace(",", ".");
             }
-            return Double.parseDouble(valorLimpo);
+            return Double.parseDouble(val);
         } catch (NumberFormatException e) {
-            return -0.01; // Se digitar qualquer outra palavra não reconhecida, salva como não preenchido
+            return null;
         }
     }
-    
+
+    private Boolean parseBooleanSeguro(String valorStr) {
+        if (valorStr == null || valorStr.trim().isEmpty() || valorStr.equals("-") || valorStr.toUpperCase().contains("VALOR PL")) {
+            return null;
+        }
+        return valorStr.trim().equalsIgnoreCase("SIM");
+    }
 }

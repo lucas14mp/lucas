@@ -139,16 +139,16 @@ function atualizarTabelaMaior() {
     
     // Verifica em tempo real qual opção está selecionada no select
     var isUpe = $('#selectUpe').val() === 'sim';
-    
+
     function f(val) {
-        // Se for vazio, nulo ou o código de "não preenchido" (-0.01)
-        if (val === null || val === undefined || val === '' || val === -0.01 || val === "-0.01") {
+        if (val === null || val === undefined || val === '' || val === "null") {
             return "-";
         }
-        return parseFloat(val || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        return parseFloat(val).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     
     function b(val) {
+        if (val === null || val === undefined || val === '') return "-";
         if (typeof val === 'string') return val.toUpperCase();
         return (val === true || val === 1) ? "SIM" : "NÃO";
     }

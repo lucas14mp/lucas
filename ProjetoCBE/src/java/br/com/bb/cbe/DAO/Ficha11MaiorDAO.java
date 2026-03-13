@@ -43,32 +43,15 @@ public class Ficha11MaiorDAO {
                 // 2. ID Moeda
                 pst.setInt(2, ficha.getMoeda().getId());
                 
-                // 3. Patrimônio Total (Do Excel)
-                pst.setDouble(3, ficha.getPatrimonioTotal());
-                
-                // 4. Participação Capital (Do Excel)
-                pst.setDouble(4, ficha.getPorcentoParticipacaoCapital());
-                
-                // 5. Porcento Poder Voto (Do Excel)
-                pst.setDouble(5, ficha.getPorcentoPoderVoto());
-                
-                // 6. Ativo Data-base (Do Excel)
-                pst.setDouble(6, ficha.getAtivoDatabase());
-                
-                // 7. Passivo Exigível (Do Excel)
-                pst.setDouble(7, ficha.getPassivoExigivel());
-                
-                // 8. Result Liq Itens Não Recorrentes (Do Excel)
-                pst.setDouble(8, ficha.getResultadoLiquidoItensNaoRecorrentes());
-                
-                // 9. Result Liq Reavaliações (Do Excel)
-                pst.setDouble(9, ficha.getResultadoLiquidoReavaliacoes());
-                
-                // 10. Lucro Distribuído (Do Excel)
-                pst.setDouble(10, ficha.getLucroDistribuido());
-                
-                // 11. Controla Empresas (Do Excel)
-                pst.setBoolean(11, ficha.isControlaEmpresa()); 
+                pst.setObject(3, ficha.getPatrimonioTotal(), java.sql.Types.DOUBLE);
+                pst.setObject(4, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+                pst.setObject(5, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+                pst.setObject(6, ficha.getAtivoDatabase(), java.sql.Types.DOUBLE);
+                pst.setObject(7, ficha.getPassivoExigivel(), java.sql.Types.DOUBLE);
+                pst.setObject(8, ficha.getResultadoLiquidoItensNaoRecorrentes(), java.sql.Types.DOUBLE);
+                pst.setObject(9, ficha.getResultadoLiquidoReavaliacoes(), java.sql.Types.DOUBLE);
+                pst.setObject(10, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+                pst.setObject(11, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN); 
                 
                 // 12. Diretoria / UPE (Do Select na tela)
                 if (ficha.getDiretoria() != null && !ficha.getDiretoria().isEmpty()) {
@@ -95,23 +78,12 @@ public class Ficha11MaiorDAO {
                 } else {
                     pst.setNull(17, java.sql.Types.VARCHAR);
                 }
-
-                // --- CAMPOS NÃO PREENCHIDOS PELO EXCEL (DEFINIR PADRÃO) ---
                 
-                // 18. Possui Cotação (Padrão: False)
-                pst.setBoolean(18, false); 
-                
-                // 19. Método Valoração (Padrão: "Não Informado")
-                pst.setString(19, "Não Informado via Excel"); 
-                
-                // 20. Valor Empresa (Padrão: 0.0)
-                pst.setDouble(20, 0.0);
-                
-                // 21. Valor Total Lucro/Prejuízo Líquido (Padrão: 0.0)
-                pst.setDouble(21, 0.0);
-                
-                // 22. Resultado Liq Variação Cambial (Padrão: 0.0)
-                pst.setDouble(22, 0.0);
+                pst.setObject(18, ficha.getPossuiCotacaoEmBolsa(), java.sql.Types.BOOLEAN);
+                pst.setString(19, ficha.getMetodoValoracao() != null && !ficha.getMetodoValoracao().isEmpty() ? ficha.getMetodoValoracao() : "Não Informado via Excel");
+                pst.setObject(20, ficha.getValorEmpresa(), java.sql.Types.DOUBLE);
+                pst.setObject(21, ficha.getValorTotalLucroPrejuizo(), java.sql.Types.DOUBLE);
+                pst.setObject(22, ficha.getResultadoLiquidoVariacaoCambial(), java.sql.Types.DOUBLE);
 
                 pst.addBatch();
             }
@@ -129,27 +101,26 @@ public class Ficha11MaiorDAO {
     }
 
     public static void createBatchCoger(List<Ficha11Maior> fichas) {
-        System.out.println("ENTROU NO CREATE");
         String sql = "INSERT INTO ficha11_participacao_maior (lucro_distribuido, valor_empresa, patrimonio_total, participacao_capital_social, porcento_poder_voto, ativo_database, passivo_exigivel, valor_total_lucro_preju_liquido, result_liq_reavaliacoes, result_liq_variacao_cambial, controla_empresas, data_criacao, trimestre, id_moeda, chave, id_empresa, id_status, metodo_valoracao) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
-            connection.setAutoCommit(false); // Desabilita o auto-commit para usar transações
+            connection.setAutoCommit(false); 
             pst = connection.prepareStatement(sql);
 
             for (Ficha11Maior ficha : fichas) {
-                pst.setDouble(1, ficha.getLucroDistribuido());
-                pst.setDouble(2, ficha.getValorEmpresa());
-                pst.setDouble(3, ficha.getPatrimonioTotal());
-                pst.setDouble(4, ficha.getPorcentoParticipacaoCapital());
-                pst.setDouble(5, ficha.getPorcentoPoderVoto());
-                pst.setDouble(6, ficha.getAtivoDatabase());
-                pst.setDouble(7, ficha.getPassivoExigivel());
-                pst.setDouble(8, ficha.getValorTotalLucroPrejuizo());
-                pst.setDouble(9, ficha.getResultadoLiquidoReavaliacoes());
-                pst.setDouble(10, ficha.getResultadoLiquidoVariacaoCambial());
-                pst.setBoolean(11, ficha.isControlaEmpresa());
+                pst.setObject(1, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+                pst.setObject(2, ficha.getValorEmpresa(), java.sql.Types.DOUBLE);
+                pst.setObject(3, ficha.getPatrimonioTotal(), java.sql.Types.DOUBLE);
+                pst.setObject(4, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+                pst.setObject(5, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+                pst.setObject(6, ficha.getAtivoDatabase(), java.sql.Types.DOUBLE);
+                pst.setObject(7, ficha.getPassivoExigivel(), java.sql.Types.DOUBLE);
+                pst.setObject(8, ficha.getValorTotalLucroPrejuizo(), java.sql.Types.DOUBLE);
+                pst.setObject(9, ficha.getResultadoLiquidoReavaliacoes(), java.sql.Types.DOUBLE);
+                pst.setObject(10, ficha.getResultadoLiquidoVariacaoCambial(), java.sql.Types.DOUBLE);
+                pst.setObject(11, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);
                 pst.setDate(12, new java.sql.Date(ficha.getDataCriacao().getTime()));
                 pst.setInt(13, ficha.getTrimestre());
                 pst.setInt(14, ficha.getMoeda().getId());
@@ -159,16 +130,11 @@ public class Ficha11MaiorDAO {
                 pst.setString(18, ficha.getMetodoValoracao());
                 pst.addBatch();
             }
-            pst.executeBatch(); // Executa todas as inserções em lote
-            connection.commit(); // Confirma a transação
-            System.out.println("CRIOU COGER");
+            pst.executeBatch(); 
+            connection.commit(); 
         } catch (SQLException e) {
             if (connection != null) {
-                try {
-                    connection.rollback(); // Reverte a transação em caso de erro
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { connection.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
             e.printStackTrace();
         } finally {
@@ -177,41 +143,39 @@ public class Ficha11MaiorDAO {
     }
      
     public static void createBatchUpe(List<Ficha11Maior> fichas) {
-        System.out.println("ENTROU NO CREATE");
-        String sql = "INSERT INTO ficha11_participacao_maior (id_moeda, participacao_capital_social, porcento_poder_voto, possui_cotacao_em_bolsa, metodo_valoracao, result_liq_itens_nao_recorrentes, lucro_distribuido, controla_empresas, data_criacao, trimestre, chave, id_empresa, id_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        // SQL com a coluna 'diretoria' adicionada no final
+        String sql = "INSERT INTO ficha11_participacao_maior (id_moeda, participacao_capital_social, porcento_poder_voto, possui_cotacao_em_bolsa, metodo_valoracao, result_liq_itens_nao_recorrentes, lucro_distribuido, controla_empresas, data_criacao, trimestre, chave, id_empresa, id_status, diretoria) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
-            connection.setAutoCommit(false); // Desabilita o auto-commit para usar transações
+            connection.setAutoCommit(false); 
             pst = connection.prepareStatement(sql);
 
             for (Ficha11Maior ficha : fichas) {
                 pst.setInt(1, ficha.getMoeda().getId());
-                pst.setDouble(2, ficha.getPorcentoParticipacaoCapital());
-                pst.setDouble(3, ficha.getPorcentoPoderVoto());
-                pst.setBoolean(4, ficha.isPossuiCotacaoEmBolsa());
+                pst.setObject(2, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+                pst.setObject(3, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+                pst.setObject(4, ficha.getPossuiCotacaoEmBolsa(), java.sql.Types.BOOLEAN);
                 pst.setString(5, ficha.getMetodoValoracao());
-                pst.setDouble(6, ficha.getResultadoLiquidoItensNaoRecorrentes());
-                pst.setDouble(7, ficha.getLucroDistribuido());
-                pst.setBoolean(8, ficha.isControlaEmpresa());
+                pst.setObject(6, ficha.getResultadoLiquidoItensNaoRecorrentes(), java.sql.Types.DOUBLE);
+                pst.setObject(7, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+                pst.setObject(8, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);
                 pst.setDate(9, new java.sql.Date(ficha.getDataCriacao().getTime()));
                 pst.setInt(10, ficha.getTrimestre());
                 pst.setString(11, ficha.getFuncionario().getChave());
                 pst.setInt(12, ficha.getEmpresa().getId());
                 pst.setInt(13, ficha.getStatus().getId());
+                
+                // Setando a diretoria
+                pst.setString(14, "UPE");
                 pst.addBatch();
             }
-            pst.executeBatch(); // Executa todas as inserções em lote
-            connection.commit(); // Confirma a transação
-            System.out.println("CRIOU UPE" );
+            pst.executeBatch(); 
+            connection.commit(); 
         } catch (SQLException e) {
             if (connection != null) {
-                try {
-                    connection.rollback(); // Reverte a transação em caso de erro
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { connection.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
             e.printStackTrace();
         } finally {
@@ -228,26 +192,28 @@ public class Ficha11MaiorDAO {
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setBoolean(1, ficha.isPossuiCotacaoEmBolsa());
+            
+            pst.setObject(1, ficha.getPossuiCotacaoEmBolsa(), java.sql.Types.BOOLEAN);
             pst.setString(2, ficha.getMetodoValoracao());
-            pst.setDouble(3, ficha.getValorEmpresa());
-            pst.setDouble(4, ficha.getPatrimonioTotal());
-            pst.setDouble(5, ficha.getPorcentoParticipacaoCapital());
-            pst.setDouble(6, ficha.getPorcentoPoderVoto());
-            pst.setDouble(7, ficha.getAtivoDatabase());
-            pst.setDouble(8, ficha.getPassivoExigivel());
-            pst.setDouble(9, ficha.getValorTotalLucroPrejuizo());
-            pst.setDouble(10, ficha.getResultadoLiquidoItensNaoRecorrentes());
-            pst.setDouble(11, ficha.getResultadoLiquidoReavaliacoes());
-            pst.setDouble(12, ficha.getResultadoLiquidoVariacaoCambial());
-            pst.setDouble(13, ficha.getLucroDistribuido());
-            pst.setBoolean(14, ficha.isControlaEmpresa());
+            pst.setObject(3, ficha.getValorEmpresa(), java.sql.Types.DOUBLE);
+            pst.setObject(4, ficha.getPatrimonioTotal(), java.sql.Types.DOUBLE);
+            pst.setObject(5, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+            pst.setObject(6, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+            pst.setObject(7, ficha.getAtivoDatabase(), java.sql.Types.DOUBLE);
+            pst.setObject(8, ficha.getPassivoExigivel(), java.sql.Types.DOUBLE);
+            pst.setObject(9, ficha.getValorTotalLucroPrejuizo(), java.sql.Types.DOUBLE);
+            pst.setObject(10, ficha.getResultadoLiquidoItensNaoRecorrentes(), java.sql.Types.DOUBLE);
+            pst.setObject(11, ficha.getResultadoLiquidoReavaliacoes(), java.sql.Types.DOUBLE);
+            pst.setObject(12, ficha.getResultadoLiquidoVariacaoCambial(), java.sql.Types.DOUBLE);
+            pst.setObject(13, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+            pst.setObject(14, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);   
             pst.setDate(15, new java.sql.Date(ficha.getDataCriacao().getTime()));
             pst.setInt(16, DataUtils.validaTrimestre());
             pst.setInt(17, ficha.getMoeda().getId());
             pst.setString(18, ficha.getFuncionario().getChave());
             pst.setInt(19, ficha.getEmpresa().getId());
             pst.setInt(20, ficha.getStatus().getId());
+            
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -265,25 +231,28 @@ public class Ficha11MaiorDAO {
         try {
             connection = Conexao.conectar();
             pst = connection.prepareStatement(sql);
-            pst.setBoolean(1, ficha.isPossuiCotacaoEmBolsa());
+            
+            pst.setObject(1, ficha.getPossuiCotacaoEmBolsa(), java.sql.Types.BOOLEAN);
             pst.setString(2, ficha.getMetodoValoracao());
-            pst.setDouble(3, ficha.getValorEmpresa());
-            pst.setDouble(4, ficha.getPatrimonioTotal());
-            pst.setDouble(5, ficha.getPorcentoParticipacaoCapital());
-            pst.setDouble(6, ficha.getPorcentoPoderVoto());
-            pst.setDouble(7, ficha.getAtivoDatabase());
-            pst.setDouble(8, ficha.getPassivoExigivel());
-            pst.setDouble(9, ficha.getValorTotalLucroPrejuizo());
-            pst.setDouble(10, ficha.getResultadoLiquidoItensNaoRecorrentes());
-            pst.setDouble(11, ficha.getResultadoLiquidoReavaliacoes());
-            pst.setDouble(12, ficha.getResultadoLiquidoVariacaoCambial());
-            pst.setDouble(13, ficha.getLucroDistribuido());
-            pst.setBoolean(14, ficha.isControlaEmpresa());
+            pst.setObject(3, ficha.getValorEmpresa(), java.sql.Types.DOUBLE);
+            pst.setObject(4, ficha.getPatrimonioTotal(), java.sql.Types.DOUBLE);
+            pst.setObject(5, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+            pst.setObject(6, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+            pst.setObject(7, ficha.getAtivoDatabase(), java.sql.Types.DOUBLE);
+            pst.setObject(8, ficha.getPassivoExigivel(), java.sql.Types.DOUBLE);
+            pst.setObject(9, ficha.getValorTotalLucroPrejuizo(), java.sql.Types.DOUBLE);
+            pst.setObject(10, ficha.getResultadoLiquidoItensNaoRecorrentes(), java.sql.Types.DOUBLE);
+            pst.setObject(11, ficha.getResultadoLiquidoReavaliacoes(), java.sql.Types.DOUBLE);
+            pst.setObject(12, ficha.getResultadoLiquidoVariacaoCambial(), java.sql.Types.DOUBLE);
+            pst.setObject(13, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+            pst.setObject(14, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);
+            
             pst.setInt(15, ficha.getMoeda().getId());
             pst.setInt(16, ficha.getEmpresa().getId());
             pst.setString(17, ficha.getFuncionario().getChave());
             pst.setDate(18, new java.sql.Date(ficha.getDataCriacao().getTime()));
             pst.setInt(19, ficha.getId());
+            
             pst.execute();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -294,11 +263,22 @@ public class Ficha11MaiorDAO {
     }
     
     public static void updateBatchCoger(List<Ficha11Maior> fichas) {
-        System.out.println("ENTROU NO UPDATE COGER");
-        String sql = "UPDATE ficha11_participacao_maior SET lucro_distribuido = ?, valor_empresa = ?, patrimonio_total = ?"+
-                ", participacao_capital_social = ?, porcento_poder_voto = ?, ativo_database = ?, passivo_exigivel = ?,"+
-                " valor_total_lucro_preju_liquido = ?, result_liq_reavaliacoes = ?, result_liq_variacao_cambial = ?,"+
-                " controla_empresas = ?, id_moeda = ?, chave = ?, data_criacao = ?, metodo_valoracao = ? WHERE id_empresa = ? AND trimestre = ? AND data_criacao = ?";
+        String sql = "UPDATE ficha11_participacao_maior SET " +
+                "lucro_distribuido = COALESCE(?, lucro_distribuido), " +
+                "valor_empresa = COALESCE(?, valor_empresa), " +
+                "patrimonio_total = COALESCE(?, patrimonio_total), " +
+                "participacao_capital_social = COALESCE(?, participacao_capital_social), " +
+                "porcento_poder_voto = COALESCE(?, porcento_poder_voto), " +
+                "ativo_database = COALESCE(?, ativo_database), " +
+                "passivo_exigivel = COALESCE(?, passivo_exigivel), " +
+                "valor_total_lucro_preju_liquido = COALESCE(?, valor_total_lucro_preju_liquido), " +
+                "result_liq_reavaliacoes = COALESCE(?, result_liq_reavaliacoes), " +
+                "result_liq_variacao_cambial = COALESCE(?, result_liq_variacao_cambial), " +
+                "controla_empresas = COALESCE(?, controla_empresas), " +
+                "id_moeda = ?, chave = ?, data_criacao = ?, " +
+                "metodo_valoracao = COALESCE(?, metodo_valoracao) " +
+                "WHERE id_empresa = ? AND trimestre = ? AND data_criacao = ?";
+        
         Connection connection = null;
         PreparedStatement pst = null;
         
@@ -306,12 +286,12 @@ public class Ficha11MaiorDAO {
         ResultSet rsAno = null;
         PreparedStatement pstAno = null;
         List<String> datas = new ArrayList<>();
-        Date dataFinal = null;
-        SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd");
+        java.util.Date dataFinal = null;
+        java.text.SimpleDateFormat formato = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        
         try {
-            
             for (Ficha11Maior ficha : fichas) {
-                SimpleDateFormat anoFormat = new SimpleDateFormat("yyyy");
+                java.text.SimpleDateFormat anoFormat = new java.text.SimpleDateFormat("yyyy");
                 int anoFicha = Integer.parseInt(anoFormat.format(ficha.getDataCriacao()));
                 connection = Conexao.conectar();
                 pstAno = connection.prepareStatement(queryAno);
@@ -319,39 +299,35 @@ public class Ficha11MaiorDAO {
                 pstAno.setInt(2, ficha.getTrimestre());
                 rsAno = pstAno.executeQuery();
                 while (rsAno.next()){
-                    String dataCriacao = rsAno.getString("data_criacao");
-                    datas.add(dataCriacao);
+                    datas.add(rsAno.getString("data_criacao"));
                 }
                 for (String data : datas){
-                    System.out.println("DATA: " + data);
                     int anoData = Integer.parseInt(data.split("-")[0]);
 
                     if (anoData == anoFicha){
-                        connection.setAutoCommit(false); // Desabilita o auto-commit para usar transações
+                        connection.setAutoCommit(false); 
                         pst = connection.prepareStatement(sql);
-                        try {
-                            // Converte a String para um objeto Date
-                            dataFinal = formato.parse(data);
-                            System.out.println("Data convertida: " + data);
-                        } catch (ParseException e) {
-                            e.printStackTrace(); // Tratamento de erro caso a String seja inválida
-                        }
-                        System.out.println("ATUALIZANDO A EMPRESA " + ficha.getEmpresa().getNome() + " DO ANO " + anoFicha + " E DO TRIMESTRE" + ficha.getTrimestre());
-                        pst.setDouble(1, ficha.getLucroDistribuido());
-                        pst.setDouble(2, ficha.getValorEmpresa());
-                        pst.setDouble(3, ficha.getPatrimonioTotal());
-                        pst.setDouble(4, ficha.getPorcentoParticipacaoCapital());
-                        pst.setDouble(5, ficha.getPorcentoPoderVoto());
-                        pst.setDouble(6, ficha.getAtivoDatabase());
-                        pst.setDouble(7, ficha.getPassivoExigivel());
-                        pst.setDouble(8, ficha.getValorTotalLucroPrejuizo());
-                        pst.setDouble(9, ficha.getResultadoLiquidoReavaliacoes());
-                        pst.setDouble(10, ficha.getResultadoLiquidoVariacaoCambial());
-                        pst.setBoolean(11, ficha.isControlaEmpresa());
+                        try { dataFinal = formato.parse(data); } catch (Exception e) {}
+                        
+                        pst.setObject(1, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
+                        pst.setObject(2, ficha.getValorEmpresa(), java.sql.Types.DOUBLE);
+                        pst.setObject(3, ficha.getPatrimonioTotal(), java.sql.Types.DOUBLE);
+                        pst.setObject(4, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+                        pst.setObject(5, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+                        pst.setObject(6, ficha.getAtivoDatabase(), java.sql.Types.DOUBLE);
+                        pst.setObject(7, ficha.getPassivoExigivel(), java.sql.Types.DOUBLE);
+                        pst.setObject(8, ficha.getValorTotalLucroPrejuizo(), java.sql.Types.DOUBLE);
+                        pst.setObject(9, ficha.getResultadoLiquidoReavaliacoes(), java.sql.Types.DOUBLE);
+                        pst.setObject(10, ficha.getResultadoLiquidoVariacaoCambial(), java.sql.Types.DOUBLE);
+                        pst.setObject(11, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);
                         pst.setInt(12, ficha.getMoeda().getId());
                         pst.setString(13, ficha.getFuncionario().getChave());
                         pst.setDate(14, new java.sql.Date(ficha.getDataCriacao().getTime()));
-                        pst.setString(15, ficha.getMetodoValoracao());
+                        
+                        String metodo = ficha.getMetodoValoracao();
+                        if (metodo != null && (metodo.trim().isEmpty() || metodo.equalsIgnoreCase("Não informado"))) metodo = null;
+                        pst.setString(15, metodo);
+                        
                         pst.setInt(16, ficha.getEmpresa().getId());
                         pst.setInt(17, ficha.getTrimestre());
                         pst.setDate(18, new java.sql.Date(dataFinal.getTime()));
@@ -359,17 +335,10 @@ public class Ficha11MaiorDAO {
                     }
                 }
             }
-            pst.executeBatch(); // Executa todas as inserções em lote
-            connection.commit(); // Confirma a transação
-            System.out.println("ATUALIZOU COGER");
+            pst.executeBatch(); 
+            connection.commit(); 
         } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback(); // Reverte a transação em caso de erro
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            if (connection != null) try { connection.rollback(); } catch (SQLException ex) {}
             e.printStackTrace();
         } finally {
             Conexao.fecharConexao(connection, pst, null);
@@ -377,39 +346,46 @@ public class Ficha11MaiorDAO {
     }
     
     public static void updateBatchUpe(List<Ficha11Maior> fichas) {
-        System.out.println("ENTROU NO UPDATE UPE");
-        String sql = "UPDATE ficha11_participacao_maior SET participacao_capital_social = ?, porcento_poder_voto = ?, controla_empresas = ?, possui_cotacao_em_bolsa = ?, metodo_valoracao = ?, result_liq_itens_nao_recorrentes = ?, lucro_distribuido = ?, data_criacao = ?, chave = ? WHERE id_empresa = ?";
+        String sql = "UPDATE ficha11_participacao_maior SET " +
+                "participacao_capital_social = COALESCE(?, participacao_capital_social), " +
+                "porcento_poder_voto = COALESCE(?, porcento_poder_voto), " +
+                "controla_empresas = COALESCE(?, controla_empresas), " +
+                "possui_cotacao_em_bolsa = COALESCE(?, possui_cotacao_em_bolsa), " +
+                "metodo_valoracao = COALESCE(?, metodo_valoracao), " +
+                "result_liq_itens_nao_recorrentes = COALESCE(?, result_liq_itens_nao_recorrentes), " +
+                "lucro_distribuido = COALESCE(?, lucro_distribuido), " +
+                "data_criacao = ?, chave = ?, diretoria = 'UPE' " +
+                "WHERE id_empresa = ? AND trimestre = ?";
+                
         Connection connection = null;
         PreparedStatement pst = null;
         try {
             connection = Conexao.conectar();
-            connection.setAutoCommit(false); // Desabilita o auto-commit para usar transações
+            connection.setAutoCommit(false); 
             pst = connection.prepareStatement(sql);
 
             for (Ficha11Maior ficha : fichas) {
-                pst.setDouble(1, ficha.getPorcentoParticipacaoCapital());
-                pst.setDouble(2, ficha.getPorcentoPoderVoto());
-                pst.setBoolean(3, ficha.isControlaEmpresa());
-                pst.setBoolean(4, ficha.isPossuiCotacaoEmBolsa());
-                pst.setString(5, ficha.getMetodoValoracao());
-                pst.setDouble(6, ficha.getResultadoLiquidoItensNaoRecorrentes());
-                pst.setDouble(7, ficha.getLucroDistribuido());
+                pst.setObject(1, ficha.getPorcentoParticipacaoCapital(), java.sql.Types.DOUBLE);
+                pst.setObject(2, ficha.getPorcentoPoderVoto(), java.sql.Types.DOUBLE);
+                pst.setObject(3, ficha.getControlaEmpresa(), java.sql.Types.BOOLEAN);
+                pst.setObject(4, ficha.getPossuiCotacaoEmBolsa(), java.sql.Types.BOOLEAN);
+                
+                String metodo = ficha.getMetodoValoracao();
+                if (metodo != null && (metodo.trim().isEmpty() || metodo.equalsIgnoreCase("Não informado"))) metodo = null;
+                pst.setString(5, metodo);
+                
+                pst.setObject(6, ficha.getResultadoLiquidoItensNaoRecorrentes(), java.sql.Types.DOUBLE);
+                pst.setObject(7, ficha.getLucroDistribuido(), java.sql.Types.DOUBLE);
                 pst.setDate(8, new java.sql.Date(ficha.getDataCriacao().getTime()));
                 pst.setString(9, ficha.getFuncionario().getChave());
                 pst.setInt(10, ficha.getEmpresa().getId());
+                pst.setInt(11, ficha.getTrimestre()); 
                 pst.addBatch();
             }
-            pst.executeBatch(); // Executa todas as inserções em lote
-            connection.commit(); // Confirma a transação
-            System.out.println("ATUALIZOU UPE");
+            pst.executeBatch(); 
+            connection.commit(); 
         } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback(); // Reverte a transação em caso de erro
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            if (connection != null) try { connection.rollback(); } catch (SQLException ex) {}
             e.printStackTrace();
         } finally {
             Conexao.fecharConexao(connection, pst, null);
@@ -453,20 +429,48 @@ public class Ficha11MaiorDAO {
             while (rs.next()) {
                 ficha = new Ficha11Maior();
                 ficha.setId(rs.getInt("id"));
-                ficha.setPossuiCotacaoEmBolsa(rs.getBoolean("possui_cotacao_em_bolsa"));
+                
+                boolean possuiCotacao = rs.getBoolean("possui_cotacao_em_bolsa");
+                ficha.setPossuiCotacaoEmBolsa(rs.wasNull() ? null : possuiCotacao);
+                
                 ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
-                ficha.setValorEmpresa(rs.getDouble("valor_empresa"));
-                ficha.setPatrimonioTotal(rs.getDouble("patrimonio_total"));
-                ficha.setPorcentoParticipacaoCapital(rs.getDouble("participacao_capital_social"));
-                ficha.setPorcentoPoderVoto(rs.getDouble("porcento_poder_voto"));
-                ficha.setAtivoDatabase(rs.getDouble("ativo_database"));
-                ficha.setPassivoExigivel(rs.getDouble("passivo_exigivel"));
-                ficha.setValorTotalLucroPrejuizo(rs.getDouble("valor_total_lucro_preju_liquido"));
-                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.getDouble("result_liq_itens_nao_recorrentes"));
-                ficha.setResultadoLiquidoReavaliacoes(rs.getDouble("result_liq_reavaliacoes"));
-                ficha.setResultadoLiquidoVariacaoCambial(rs.getDouble("result_liq_variacao_cambial"));
-                ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
-                ficha.setControlaEmpresa(rs.getBoolean("controla_empresas"));
+                
+                double valEmpresa = rs.getDouble("valor_empresa");
+                ficha.setValorEmpresa(rs.wasNull() ? null : valEmpresa);
+                
+                double patTotal = rs.getDouble("patrimonio_total");
+                ficha.setPatrimonioTotal(rs.wasNull() ? null : patTotal);
+                
+                double pctCap = rs.getDouble("participacao_capital_social");
+                ficha.setPorcentoParticipacaoCapital(rs.wasNull() ? null : pctCap);
+                
+                double pctVoto = rs.getDouble("porcento_poder_voto");
+                ficha.setPorcentoPoderVoto(rs.wasNull() ? null : pctVoto);
+                
+                double ativo = rs.getDouble("ativo_database");
+                ficha.setAtivoDatabase(rs.wasNull() ? null : ativo);
+                
+                double passivo = rs.getDouble("passivo_exigivel");
+                ficha.setPassivoExigivel(rs.wasNull() ? null : passivo);
+                
+                double lucro = rs.getDouble("valor_total_lucro_preju_liquido");
+                ficha.setValorTotalLucroPrejuizo(rs.wasNull() ? null : lucro);
+                
+                double resNaoRec = rs.getDouble("result_liq_itens_nao_recorrentes");
+                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.wasNull() ? null : resNaoRec);
+                
+                double resReav = rs.getDouble("result_liq_reavaliacoes");
+                ficha.setResultadoLiquidoReavaliacoes(rs.wasNull() ? null : resReav);
+                
+                double resCamb = rs.getDouble("result_liq_variacao_cambial");
+                ficha.setResultadoLiquidoVariacaoCambial(rs.wasNull() ? null : resCamb);
+                
+                double lucroDist = rs.getDouble("lucro_distribuido");
+                ficha.setLucroDistribuido(rs.wasNull() ? null : lucroDist);
+                
+                boolean controla = rs.getBoolean("controla_empresas");
+                ficha.setControlaEmpresa(rs.wasNull() ? null : controla);
+                
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setEmpresa(empresaController.getEmpresaById(rs.getInt("id_empresa")));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
@@ -523,20 +527,48 @@ public class Ficha11MaiorDAO {
             while (rs.next()) {
                 ficha = new Ficha11Maior();
                 ficha.setId(rs.getInt("id"));
-                ficha.setPossuiCotacaoEmBolsa(rs.getBoolean("possui_cotacao_em_bolsa"));
+                
+                boolean possuiCotacao = rs.getBoolean("possui_cotacao_em_bolsa");
+                ficha.setPossuiCotacaoEmBolsa(rs.wasNull() ? null : possuiCotacao);
+                
                 ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
-                ficha.setValorEmpresa(rs.getDouble("valor_empresa"));
-                ficha.setPatrimonioTotal(rs.getDouble("patrimonio_total"));
-                ficha.setPorcentoParticipacaoCapital(rs.getDouble("participacao_capital_social"));
-                ficha.setPorcentoPoderVoto(rs.getDouble("porcento_poder_voto"));
-                ficha.setAtivoDatabase(rs.getDouble("ativo_database"));
-                ficha.setPassivoExigivel(rs.getDouble("passivo_exigivel"));
-                ficha.setValorTotalLucroPrejuizo(rs.getDouble("valor_total_lucro_preju_liquido"));
-                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.getDouble("result_liq_itens_nao_recorrentes"));
-                ficha.setResultadoLiquidoReavaliacoes(rs.getDouble("result_liq_reavaliacoes"));
-                ficha.setResultadoLiquidoVariacaoCambial(rs.getDouble("result_liq_variacao_cambial"));
-                ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
-                ficha.setControlaEmpresa(rs.getBoolean("controla_empresas"));
+                
+                double valEmpresa = rs.getDouble("valor_empresa");
+                ficha.setValorEmpresa(rs.wasNull() ? null : valEmpresa);
+                
+                double patTotal = rs.getDouble("patrimonio_total");
+                ficha.setPatrimonioTotal(rs.wasNull() ? null : patTotal);
+                
+                double pctCap = rs.getDouble("participacao_capital_social");
+                ficha.setPorcentoParticipacaoCapital(rs.wasNull() ? null : pctCap);
+                
+                double pctVoto = rs.getDouble("porcento_poder_voto");
+                ficha.setPorcentoPoderVoto(rs.wasNull() ? null : pctVoto);
+                
+                double ativo = rs.getDouble("ativo_database");
+                ficha.setAtivoDatabase(rs.wasNull() ? null : ativo);
+                
+                double passivo = rs.getDouble("passivo_exigivel");
+                ficha.setPassivoExigivel(rs.wasNull() ? null : passivo);
+                
+                double lucro = rs.getDouble("valor_total_lucro_preju_liquido");
+                ficha.setValorTotalLucroPrejuizo(rs.wasNull() ? null : lucro);
+                
+                double resNaoRec = rs.getDouble("result_liq_itens_nao_recorrentes");
+                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.wasNull() ? null : resNaoRec);
+                
+                double resReav = rs.getDouble("result_liq_reavaliacoes");
+                ficha.setResultadoLiquidoReavaliacoes(rs.wasNull() ? null : resReav);
+                
+                double resCamb = rs.getDouble("result_liq_variacao_cambial");
+                ficha.setResultadoLiquidoVariacaoCambial(rs.wasNull() ? null : resCamb);
+                
+                double lucroDist = rs.getDouble("lucro_distribuido");
+                ficha.setLucroDistribuido(rs.wasNull() ? null : lucroDist);
+                
+                boolean controla = rs.getBoolean("controla_empresas");
+                ficha.setControlaEmpresa(rs.wasNull() ? null : controla);
+                
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setEmpresa(empresaController.getEmpresaById(rs.getInt("id_empresa")));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
@@ -570,26 +602,55 @@ public class Ficha11MaiorDAO {
             if (rs.next()) {
                 ficha = new Ficha11Maior();
                 ficha.setId(rs.getInt("id"));
-                ficha.setPossuiCotacaoEmBolsa(rs.getBoolean("possui_cotacao_em_bolsa"));
+                
+                boolean possuiCotacao = rs.getBoolean("possui_cotacao_em_bolsa");
+                ficha.setPossuiCotacaoEmBolsa(rs.wasNull() ? null : possuiCotacao);
+                
                 ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
-                ficha.setValorEmpresa(rs.getDouble("valor_empresa"));
-                ficha.setPatrimonioTotal(rs.getDouble("patrimonio_total"));
-                ficha.setPorcentoParticipacaoCapital(rs.getDouble("participacao_capital_social"));
-                ficha.setPorcentoPoderVoto(rs.getDouble("porcento_poder_voto"));
-                ficha.setAtivoDatabase(rs.getDouble("ativo_database"));
-                ficha.setPassivoExigivel(rs.getDouble("passivo_exigivel"));
-                ficha.setValorTotalLucroPrejuizo(rs.getDouble("valor_total_lucro_preju_liquido"));
-                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.getDouble("result_liq_itens_nao_recorrentes"));
-                ficha.setResultadoLiquidoReavaliacoes(rs.getDouble("result_liq_reavaliacoes"));
-                ficha.setResultadoLiquidoVariacaoCambial(rs.getDouble("result_liq_variacao_cambial"));
-                ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
-                ficha.setControlaEmpresa(rs.getBoolean("controla_empresas"));
+                
+                double valEmpresa = rs.getDouble("valor_empresa");
+                ficha.setValorEmpresa(rs.wasNull() ? null : valEmpresa);
+                
+                double patTotal = rs.getDouble("patrimonio_total");
+                ficha.setPatrimonioTotal(rs.wasNull() ? null : patTotal);
+                
+                double pctCap = rs.getDouble("participacao_capital_social");
+                ficha.setPorcentoParticipacaoCapital(rs.wasNull() ? null : pctCap);
+                
+                double pctVoto = rs.getDouble("porcento_poder_voto");
+                ficha.setPorcentoPoderVoto(rs.wasNull() ? null : pctVoto);
+                
+                double ativo = rs.getDouble("ativo_database");
+                ficha.setAtivoDatabase(rs.wasNull() ? null : ativo);
+                
+                double passivo = rs.getDouble("passivo_exigivel");
+                ficha.setPassivoExigivel(rs.wasNull() ? null : passivo);
+                
+                double lucro = rs.getDouble("valor_total_lucro_preju_liquido");
+                ficha.setValorTotalLucroPrejuizo(rs.wasNull() ? null : lucro);
+                
+                double resNaoRec = rs.getDouble("result_liq_itens_nao_recorrentes");
+                ficha.setResultadoLiquidoItensNaoRecorrentes(rs.wasNull() ? null : resNaoRec);
+                
+                double resReav = rs.getDouble("result_liq_reavaliacoes");
+                ficha.setResultadoLiquidoReavaliacoes(rs.wasNull() ? null : resReav);
+                
+                double resCamb = rs.getDouble("result_liq_variacao_cambial");
+                ficha.setResultadoLiquidoVariacaoCambial(rs.wasNull() ? null : resCamb);
+                
+                double lucroDist = rs.getDouble("lucro_distribuido");
+                ficha.setLucroDistribuido(rs.wasNull() ? null : lucroDist);
+                
+                boolean controla = rs.getBoolean("controla_empresas");
+                ficha.setControlaEmpresa(rs.wasNull() ? null : controla);
+                
                 ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
                 ficha.setEmpresa(empresaController.getEmpresaById(rs.getInt("id_empresa")));
                 ficha.setDataCriacao(rs.getDate("data_criacao"));
                 ficha.setTrimestre(rs.getInt("trimestre"));
                 ficha.setFuncionario(funcionarioController.getFuncionarioByChave(rs.getString("chave")));
                 ficha.setStatus(statusController.getStatusById(rs.getInt("id_status")));
+                
                 return Optional.of(ficha);
             }
         } catch (SQLException e) {
@@ -807,24 +868,28 @@ public class Ficha11MaiorDAO {
     }
     
     public static void sincronizarValoresCogerParaUpe(int idEmpresa, int trimestre, int ano) {
-        // Copia os dados financeiros exatos do registro da COGER para o da UPE
         String sql = "UPDATE ficha11_participacao_maior upe " +
                      "JOIN ficha11_participacao_maior coger " +
                      "  ON upe.id_empresa = coger.id_empresa " +
                      " AND upe.trimestre = coger.trimestre " +
                      " AND YEAR(upe.data_criacao) = YEAR(coger.data_criacao) " +
                      "SET " +
-                     "  upe.valor_empresa = coger.valor_empresa, " +
-                     "  upe.patrimonio_total = coger.patrimonio_total, " +
-                     "  upe.ativo_database = coger.ativo_database, " +
-                     "  upe.passivo_exigivel = coger.passivo_exigivel, " +
-                     "  upe.valor_total_lucro_preju_liquido = coger.valor_total_lucro_preju_liquido, " +
-                     "  upe.result_liq_itens_nao_recorrentes = coger.result_liq_itens_nao_recorrentes, " +
-                     "  upe.result_liq_reavaliacoes = coger.result_liq_reavaliacoes, " +
-                     "  upe.result_liq_variacao_cambial = coger.result_liq_variacao_cambial, " +
-                     "  upe.lucro_distribuido = coger.lucro_distribuido " +
+                     "  upe.valor_empresa = IF(upe.valor_empresa IS NULL OR upe.valor_empresa = -0.01 OR upe.valor_empresa = 0, coger.valor_empresa, upe.valor_empresa), " +
+                     "  upe.patrimonio_total = IF(upe.patrimonio_total IS NULL OR upe.patrimonio_total = -0.01 OR upe.patrimonio_total = 0, coger.patrimonio_total, upe.patrimonio_total), " +
+                     "  upe.ativo_database = IF(upe.ativo_database IS NULL OR upe.ativo_database = -0.01 OR upe.ativo_database = 0, coger.ativo_database, upe.ativo_database), " +
+                     "  upe.passivo_exigivel = IF(upe.passivo_exigivel IS NULL OR upe.passivo_exigivel = -0.01 OR upe.passivo_exigivel = 0, coger.passivo_exigivel, upe.passivo_exigivel), " +
+                     "  upe.valor_total_lucro_preju_liquido = IF(upe.valor_total_lucro_preju_liquido IS NULL OR upe.valor_total_lucro_preju_liquido = -0.01 OR upe.valor_total_lucro_preju_liquido = 0, coger.valor_total_lucro_preju_liquido, upe.valor_total_lucro_preju_liquido), " +
+                     "  upe.result_liq_itens_nao_recorrentes = IF(upe.result_liq_itens_nao_recorrentes IS NULL OR upe.result_liq_itens_nao_recorrentes = -0.01 OR upe.result_liq_itens_nao_recorrentes = 0, coger.result_liq_itens_nao_recorrentes, upe.result_liq_itens_nao_recorrentes), " +
+                     "  upe.result_liq_reavaliacoes = IF(upe.result_liq_reavaliacoes IS NULL OR upe.result_liq_reavaliacoes = -0.01 OR upe.result_liq_reavaliacoes = 0, coger.result_liq_reavaliacoes, upe.result_liq_reavaliacoes), " +
+                     "  upe.result_liq_variacao_cambial = IF(upe.result_liq_variacao_cambial IS NULL OR upe.result_liq_variacao_cambial = -0.01 OR upe.result_liq_variacao_cambial = 0, coger.result_liq_variacao_cambial, upe.result_liq_variacao_cambial), " +
+                     "  upe.lucro_distribuido = IF(upe.lucro_distribuido IS NULL OR upe.lucro_distribuido = -0.01, coger.lucro_distribuido, upe.lucro_distribuido), " +
+                     "  upe.participacao_capital_social = IF(upe.participacao_capital_social IS NULL OR upe.participacao_capital_social = -0.01 OR upe.participacao_capital_social = 0, coger.participacao_capital_social, upe.participacao_capital_social), " +
+                     "  upe.porcento_poder_voto = IF(upe.porcento_poder_voto IS NULL OR upe.porcento_poder_voto = -0.01 OR upe.porcento_poder_voto = 0, coger.porcento_poder_voto, upe.porcento_poder_voto), " +
+                     "  upe.metodo_valoracao = IF(upe.metodo_valoracao IS NULL OR upe.metodo_valoracao = '' OR upe.metodo_valoracao = 'Não informado', coger.metodo_valoracao, upe.metodo_valoracao), " +
+                     "  upe.possui_cotacao_em_bolsa = COALESCE(upe.possui_cotacao_em_bolsa, coger.possui_cotacao_em_bolsa), " +
+                     "  upe.controla_empresas = COALESCE(upe.controla_empresas, coger.controla_empresas) " +
                      "WHERE upe.diretoria = 'UPE' " +
-                     "  AND coger.diretoria = 'COGER' " +
+                     "  AND (coger.diretoria IS NULL OR coger.diretoria != 'UPE') " +
                      "  AND upe.id_empresa = ? " +
                      "  AND upe.trimestre = ? " +
                      "  AND YEAR(upe.data_criacao) = ?";
@@ -837,13 +902,9 @@ public class Ficha11MaiorDAO {
             pst.setInt(1, idEmpresa);
             pst.setInt(2, trimestre);
             pst.setInt(3, ano);
-            int qtdeAlterada = pst.executeUpdate();
-            
-            if (qtdeAlterada > 0) {
-                System.out.println(">>> SINCRONIZADO: Valores financeiros da COGER injetados na ficha da UPE (Empresa ID: " + idEmpresa + ")");
-            }
+            pst.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Erro ao sincronizar COGER -> UPE: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             Conexao.fecharConexao(conn, pst, null);
         }
@@ -902,20 +963,47 @@ public class Ficha11MaiorDAO {
                 while (rs.next()) {
                     Ficha11Maior ficha = new Ficha11Maior();
                     ficha.setId(rs.getInt("id"));
-                    ficha.setPossuiCotacaoEmBolsa(rs.getBoolean("possui_cotacao_em_bolsa"));
+                    
+                    boolean possuiCotacao = rs.getBoolean("possui_cotacao_em_bolsa");
+                    ficha.setPossuiCotacaoEmBolsa(rs.wasNull() ? null : possuiCotacao);
+                    
                     ficha.setMetodoValoracao(rs.getString("metodo_valoracao"));
-                    ficha.setValorEmpresa(rs.getDouble("valor_empresa"));
-                    ficha.setPatrimonioTotal(rs.getDouble("patrimonio_total"));
-                    ficha.setPorcentoParticipacaoCapital(rs.getDouble("participacao_capital_social"));
-                    ficha.setPorcentoPoderVoto(rs.getDouble("porcento_poder_voto"));
-                    ficha.setAtivoDatabase(rs.getDouble("ativo_database"));
-                    ficha.setPassivoExigivel(rs.getDouble("passivo_exigivel"));
-                    ficha.setValorTotalLucroPrejuizo(rs.getDouble("valor_total_lucro_preju_liquido"));
-                    ficha.setResultadoLiquidoItensNaoRecorrentes(rs.getDouble("result_liq_itens_nao_recorrentes"));
-                    ficha.setResultadoLiquidoReavaliacoes(rs.getDouble("result_liq_reavaliacoes"));
-                    ficha.setResultadoLiquidoVariacaoCambial(rs.getDouble("result_liq_variacao_cambial"));
-                    ficha.setLucroDistribuido(rs.getDouble("lucro_distribuido"));
-                    ficha.setControlaEmpresa(rs.getBoolean("controla_empresas"));
+                    
+                    double valEmpresa = rs.getDouble("valor_empresa");
+                    ficha.setValorEmpresa(rs.wasNull() ? null : valEmpresa);
+                    
+                    double patTotal = rs.getDouble("patrimonio_total");
+                    ficha.setPatrimonioTotal(rs.wasNull() ? null : patTotal);
+                    
+                    double pctCap = rs.getDouble("participacao_capital_social");
+                    ficha.setPorcentoParticipacaoCapital(rs.wasNull() ? null : pctCap);
+                    
+                    double pctVoto = rs.getDouble("porcento_poder_voto");
+                    ficha.setPorcentoPoderVoto(rs.wasNull() ? null : pctVoto);
+                    
+                    double ativo = rs.getDouble("ativo_database");
+                    ficha.setAtivoDatabase(rs.wasNull() ? null : ativo);
+                    
+                    double passivo = rs.getDouble("passivo_exigivel");
+                    ficha.setPassivoExigivel(rs.wasNull() ? null : passivo);
+                    
+                    double lucro = rs.getDouble("valor_total_lucro_preju_liquido");
+                    ficha.setValorTotalLucroPrejuizo(rs.wasNull() ? null : lucro);
+                    
+                    double resNaoRec = rs.getDouble("result_liq_itens_nao_recorrentes");
+                    ficha.setResultadoLiquidoItensNaoRecorrentes(rs.wasNull() ? null : resNaoRec);
+                    
+                    double resReav = rs.getDouble("result_liq_reavaliacoes");
+                    ficha.setResultadoLiquidoReavaliacoes(rs.wasNull() ? null : resReav);
+                    
+                    double resCamb = rs.getDouble("result_liq_variacao_cambial");
+                    ficha.setResultadoLiquidoVariacaoCambial(rs.wasNull() ? null : resCamb);
+                    
+                    double lucroDist = rs.getDouble("lucro_distribuido");
+                    ficha.setLucroDistribuido(rs.wasNull() ? null : lucroDist);
+                    
+                    boolean controla = rs.getBoolean("controla_empresas");
+                    ficha.setControlaEmpresa(rs.wasNull() ? null : controla);
                     
                     // Preenche os objetos usando os controllers
                     ficha.setMoeda(moedaController.getMoedaById(rs.getInt("id_moeda")));
