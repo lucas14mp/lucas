@@ -83,11 +83,11 @@
                         <td>${ficha.getNome()}</td>
                         <td>${ficha.getPais().getNome()}</td>
                         <td>${ficha.getAtividadeEcn()}</td>
-                        <td>${numeroUtils.doubleToString(ficha.getParticipacaoCapital())}${ficha.getParticipacaoCapital() != -0.01 ? "%" : ""}</td>
+                        <td>${ficha.getParticipacaoCapital() != null ? numeroUtils.doubleToString(ficha.getParticipacaoCapital()) : "-"}${ficha.getParticipacaoCapital() != null ? "%" : ""}</td>
                         <td>${ficha.getMoeda().getSigla()} - ${ficha.getMoeda().getNome()}</td>
-                        <td>${ficha.getPatrimonioLiquido() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPatrimonioLiquido() != -0.01 ? numeroUtils.doubleToString(ficha.getPatrimonioLiquido()) : "Não informado"}</td>
-                        <td>${ficha.getValorMercado() != -0.01 ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorMercado() != -0.01 ? numeroUtils.doubleToString(ficha.getValorMercado()) : "Não informado"}</td>
-                        <td>${ficha.isFinalCadeia() ? "Sim" : "Não"}</td>
+                        <td>${ficha.getPatrimonioLiquido() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getPatrimonioLiquido() != null ? numeroUtils.doubleToString(ficha.getPatrimonioLiquido()) : "-"}</td>
+                        <td>${ficha.getValorMercado() != null ? ficha.getMoeda().getSimbolo() : ""} ${ficha.getValorMercado() != null ? numeroUtils.doubleToString(ficha.getValorMercado()) : "-"}</td>
+                        <td>${ficha.getFinalCadeia() != null && ficha.getFinalCadeia() ? "Sim" : "Não"}</td>
                         <td>${dataUtils.formatarData(ficha.getDataCriacao())}</td>
                         <td>
                             ${ficha.getFuncionario().getNome()}
